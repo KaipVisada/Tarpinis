@@ -1,0 +1,22 @@
+header{
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: white;
+  padding: 8px;
+  width: 100%;
+  position: fixed;
+  font-size: 1.2em;  
+}
+button{
+  cursor: pointer;
+  background-color: #007bff;
+  padding: 8px 20px 8px 20px;
+  border-radius: 5px;
+  border-color: #007bff;
+  color: white;
+  font-size: 0.8em;
+}
+button:hover {
+ background-color: RoyalBlue;
+}

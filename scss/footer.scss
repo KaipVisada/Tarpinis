@@ -1,0 +1,36 @@
+footer{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100px;
+  margin-right: 100px;
+  margin-left: 100px;
+
+  a{
+  text-decoration: none;
+  color: #007bff;
+  padding: 5px;
+}
+a:hover {
+ color: RoyalBlue;
+}
+p{
+  padding: 5px;
+  color: #a1a4a6;
+  font-size: 0.7em;
+}
+
+  .btn {
+  background-color: white;
+  border: none;
+  color: #007bff;
+  padding: 12px 16px;
+  font-size: 25px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn:hover {
+ color: RoyalBlue;
+ transform: scale(1.2);
+}
+}

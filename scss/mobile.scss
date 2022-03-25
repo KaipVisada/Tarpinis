@@ -1,0 +1,86 @@
+@media(max-width:1400px){
+  
+ section:nth-of-type(1){
+    flex-direction: column-reverse;
+}
+ section:nth-of-type(2){
+    flex-direction: column;
+}
+ section:nth-of-type(3){
+    flex-direction: column-reverse;
+}
+}
+@media only screen and (max-width:720px){
+  footer{
+      margin: 0;
+      flex-direction: column;
+      justify-content: center;
+      padding: 50px 0px 20px 0px;
+  }
+  footer p{
+      text-align: center;
+  }
+  .article-1{
+      text-align: center;
+  }
+  .article-1 h1{
+    font-size: 1em;
+  }
+  .article-1 button{
+      margin-top: 5px;
+      width: 325px;
+  }
+  .article-1 input{
+      width: 300px;
+  } 
+  .article-1 .email{
+      display: flex;
+      flex-direction: column;
+  }
+  .article-2{
+      flex-direction:column;
+  }
+  .article-3 .img-1{
+    width: 400px;
+  } 
+  .article-3 .img-2{
+    width: 400px;
+  } 
+  .article-3 .img-3{
+    width: 400px;
+  } 
+  .article-3 .text{
+    width: 400px;
+  } 
+  .article-3 p{
+      width: 400px;
+      text-align: center;
+  }
+  .article-3 h2{
+      width: 400px;
+      text-align: center;
+  }
+  .article-4 .review-1{
+    flex-direction: column;
+  }
+  .article-5{
+      text-align: center;
+  }
+  .article-5 button{
+      margin-top: 5px;
+      width: 325px;
+  }
+  .article-5 input{
+      width: 300px;
+  }
+  .article-5 .email{
+      display: flex;
+      flex-direction: column;
+  }
+
+}
+@media(max-width:1072px){
+   .article-4 .review-1{
+       justify-content: center;
+  } 
+}
