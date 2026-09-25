@@ -304,6 +304,70 @@ label.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-
 .tvprog{display:flex;align-items:center;gap:.5em;font-size:.75em;color:var(--muted);white-space:nowrap}
 .tvprog .prog-track{width:5em;height:.6em}
 .erp-frame{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px solid var(--line);border-radius:8px;background:#0f1419;display:block}
+.orders{display:grid;gap:6px}
+.order{display:grid;grid-template-columns:minmax(0,1.4fr) auto minmax(120px,1fr) 4.5em;gap:12px;align-items:center;background:none;border:1px solid transparent;border-radius:8px;padding:8px 10px;text-align:left;color:var(--ink)}
+.order:hover{background:var(--surface-2);border-color:var(--line)}
+.order .o-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order .o-n{text-align:right;font-weight:700;color:var(--pink)}
+@media (max-width:640px){.order{grid-template-columns:minmax(0,1fr) auto}.order .o-p{grid-column:1/-1}.order .o-n{display:none}}
+/* My work (phones) */
+.my{max-width:640px;margin:0 auto;display:grid;gap:14px}
+.my-head{display:flex;gap:12px;align-items:center}
+.my-head .avatar{width:44px;height:44px;font-size:15px;margin:0}
+.my-head b{display:block;font-size:18px}.my-head small{color:var(--muted)}
+.my-card{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--muted);border-radius:12px;padding:14px;display:grid;gap:12px}
+.my-card.st-b-doing{border-left-color:var(--cyan)}.my-card.st-b-blocked{border-left-color:var(--red)}.my-card.st-b-review{border-left-color:var(--amber)}
+.my-card h3{margin:0;font-size:19px;line-height:1.3}
+.my-top{display:flex;gap:8px;align-items:center}
+.my-open{margin-left:auto;color:var(--accent);font-weight:700;padding:6px 4px}
+.my-blocked{margin:0;color:var(--red);font-weight:600}
+.my-taps{display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px}
+.my-tap{min-height:64px;border-radius:12px;border:1.5px solid var(--pink);background:var(--pink-soft);color:var(--ink);font-size:24px;font-weight:800;touch-action:manipulation}
+.my-tap.wide{font-size:17px;border-color:var(--line);background:var(--surface-2)}
+.my-tap:active{background:var(--pink);color:#fff}
+.my-row{display:flex;flex-wrap:wrap;gap:10px}
+.my-big{min-height:52px;font-size:16px;flex:1;min-width:140px;border-radius:10px}
+.my-form{display:grid;gap:10px;background:var(--surface-2);border-radius:10px;padding:12px}
+.my-form input{min-height:48px;font-size:18px}
+.my-empty{text-align:center;padding:40px 16px;display:grid;gap:14px;justify-items:center}
+.my-empty p{margin:0;color:var(--muted)}
+/* stand-up */
+#standup{position:fixed;inset:0;z-index:60;background:#0f2817 linear-gradient(135deg,#1a3a2a 0%,#0f2817 50%,#1a3a2a 100%);overflow:auto;padding:max(16px,env(safe-area-inset-top)) 20px 24px;font-size:clamp(15px,1.05vw,28px)}
+.su-bar{display:flex;flex-wrap:wrap;gap:.6em;align-items:center;margin-bottom:1.2em}
+.su-bar>b{font-size:1.4em;color:var(--accent);margin-right:.4em}
+.su-dots{display:flex;flex-wrap:wrap;gap:.35em;flex:1}
+.su-dots button{width:2.3em;height:2.3em;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:.75em;font-weight:700;padding:0}
+.su-dots button.done{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.su-dots button[aria-current="true"]{border-color:var(--cyan);color:var(--ink);box-shadow:0 0 0 3px rgba(0,217,255,.25)}
+.su-clock{font-size:2em;font-weight:800;min-width:3.4em;text-align:right;color:var(--ink)}
+.su-clock.warn{color:var(--amber)}.su-clock.over{color:var(--red)}
+.su-bar .btn{font-size:.85em}
+.su-person{display:flex;gap:1em;align-items:center;margin-bottom:1em}
+.su-av.avatar{width:3.4em;height:3.4em;font-size:1.3em;margin:0}
+.su-name{font-size:2.2em;margin:0}
+.su-person p{margin:.2em 0 0}
+.su-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1em}
+@media (max-width:800px){.su-cols{grid-template-columns:1fr}}
+.su-col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1em;display:grid;gap:.6em;align-content:start}
+.su-col h3{margin:0;font-size:1.1em;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.su-item{border-left:4px solid var(--accent);padding:.35em .7em;display:grid;gap:.3em;background:var(--surface-2);border-radius:6px}
+.su-item.bad{border-left-color:var(--red)}.su-item.warn{border-left-color:var(--amber)}
+.su-item small{color:var(--muted)}
+.su-big{font-size:3em;font-weight:800;color:var(--pink);margin:0}
+.su-big small{font-size:.35em;color:var(--muted)}
+#alertBar{position:fixed;top:0;left:0;right:0;z-index:70;background:var(--red);color:#fff;font-size:clamp(16px,1.2vw,28px);padding:.7em 3em .7em 1em;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#alertBar button{position:absolute;right:.6em;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#fff;font-size:1.4em}
+body.su-on #alertBar{top:auto;bottom:0}
+#alertBar.flash{animation:alertFlash 1s 4}
+@keyframes alertFlash{50%{background:#7f1d1d}}
+@media (prefers-reduced-motion:reduce){#alertBar.flash{animation:none}}
+@media (max-width:700px){#tvBtn,#suBtn{display:none}}
+.qc-list{display:grid;gap:6px;max-height:50vh;overflow:auto}
+.qc-row{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:6px;background:var(--surface-2)}
+.qc-row .seg button[data-v="fail"][aria-pressed="true"]{background:var(--red-soft);color:var(--red)}
+.card{-webkit-touch-callout:none}
+.card.lifting{opacity:.35}
+.drag-ghost{position:fixed;z-index:80;pointer-events:none;transform:rotate(2deg);box-shadow:0 18px 40px rgba(0,0,0,.6);opacity:.95}
 /* sprint overview (kept from v1) */
 .ov{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
 @media (max-width:1100px){.ov{grid-template-columns:minmax(0,1fr)}}
@@ -470,7 +534,9 @@ body.tv .chip{font-size:.8em}
     <div class="spacer"></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-v="overview">Overview</button>
+      <button role="tab" data-v="my">My work</button>
       <button role="tab" data-v="board">Board</button>
+      <button role="tab" data-v="production">Production</button>
       <button role="tab" data-v="backlog">Backlog</button>
       <button role="tab" data-v="team">Team</button>
       <button role="tab" data-v="top">Top 3</button>
@@ -482,6 +548,7 @@ body.tv .chip{font-size:.8em}
       <span id="myTimer"></span>
       <span class="save" id="saveState" role="status" aria-live="polite"><i></i><span>Connecting</span></span>
       <span id="whoBox"></span>
+      <button class="btn" id="suBtn" title="Go through the team one person at a time">Stand-up</button>
       <button class="btn" id="tvBtn" title="Full-screen view for a TV">TV mode</button>
       <button class="btn primary" id="newTask">New task</button>
     </div>
@@ -491,6 +558,8 @@ body.tv .chip{font-size:.8em}
   <div id="erpHost" hidden></div>
 </div>
 
+<div id="standup" hidden></div>
+<div id="alertBar" role="alert" hidden></div>
 <!-- task window -->
 <dialog id="twDlg" aria-label="Task"><div id="twBody"></div></dialog>
 
@@ -520,6 +589,8 @@ body.tv .chip{font-size:.8em}
   </form>
 </dialog>
 
+<!-- quality check -->
+<dialog id="qcDlg"><form class="pad" id="qcForm"></form></dialog>
 <!-- PIN -->
 <dialog id="pinDlg"><div class="pin-wrap" id="pinBody"></div></dialog>
 

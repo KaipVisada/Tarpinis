@@ -10,6 +10,11 @@ const defaults = () => ({ machines: [], production: [], materials: [], suppliers
 const S = v => JSON.stringify(v);
 const hasIds = arr => arr.length > 0 && arr.every(x => isObj(x) && x.id != null);
 
+function mergeFields(b, m, t) {
+  const o = { ...t };
+  for (const k of new Set([...Object.keys(b), ...Object.keys(m)])) if (S(b[k]) !== S(m[k])) { if (m[k] === undefined) delete o[k]; else o[k] = clone(m[k]); }
+  return o;
+}
 function mergeArray(base, mine, theirs) {
   base = Array.isArray(base) ? base : []; mine = Array.isArray(mine) ? mine : []; theirs = Array.isArray(theirs) ? theirs : [];
   if (hasIds(mine) || hasIds(base) || hasIds(theirs)) {
@@ -22,7 +27,7 @@ function mergeArray(base, mine, theirs) {
     for (const [k, mx] of m) {
       const bx = b.get(k);
       if (bx && S(bx) === S(mx)) continue;                                                  // untouched by me
-      if (bx && idx.has(k)) { out[idx.get(k)] = clone(mx); continue; }                      // edited by me
+      if (bx && idx.has(k)) { out[idx.get(k)] = mergeFields(bx, mx, out[idx.get(k)]); continue; }  // edited by me: only the fields I changed
       if (bx && !idx.has(k)) continue;                                                      // edited by me, deleted by them: keep deleted
       if (idx.has(k) && S(out[idx.get(k)]) !== S(mx)) {                                     // both added the same id: renumber mine
         const numeric = [...out, ...mine].map(x => x && Number(x.id)).filter(Number.isFinite);
@@ -63,6 +68,9 @@ class Erp {
   constructor(store, log = console) {
     this.store = store; this.log = log; this.history = new Map();
     if (!store.get("erp/main")) store.write("erp/main", "set", defaults());
+    // start stock tracking at start-up, so the first report after an upgrade is counted, not baselined
+    const d = this.db;
+    if ((store.get("config/settings") || {}).consumeStock !== false && !isObj(d.tbStock)) { d.tbStock = { since: new Date().toISOString(), booked: this.baseline() }; store.write("erp/main", "set", d); }
     this.remember();
   }
   get db() { return normalize(this.store.get("erp/main")); }
@@ -84,6 +92,29 @@ class Erp {
     const merged = merge3(b ? JSON.parse(b) : defaults(), db, this.store.get("erp/main"));
     this.put(merged);
     return { v: this.version, merged: true, db: merged };
+  }
+  /* units > 0 takes materials out and adds finished products; units < 0 puts them back */
+  book(db, productId, units, auditAdd) {
+    const r = v => Math.round(v * 10000) / 10000;
+    const product = db.products.find(p => Number(p.id) === Number(productId));
+    const bom = db.bom.find(b => b && Number(b.product_id) === Number(productId));
+    if (bom && Array.isArray(bom.components)) for (const c of bom.components) {
+      const m = db.materials.find(x => x && Number(x.id) === Number(c.id));
+      if (m) m.stock = r((Number(m.stock) || 0) - (Number(c.qty) || 1) * units);
+    }
+    if (product) product.finishedStock = r((Number(product.finishedStock) || 0) + units);
+    const name = product ? product.name : "product " + productId;
+    auditAdd.push(this.audit(units > 0 ? "Stock out" : "Stock back", "Materials", units > 0 ? `Used materials for ${units} x ${name}; finished stock +${units}` : `Returned materials for ${-units} x ${name} (report corrected)`));
+  }
+  /* when stock tracking starts, what's already reported counts as done before tracking: nothing is taken out for it */
+  baseline() {
+    const out = {};
+    for (const [p, d] of this.store.docs) {
+      if (!/^tasks\/[^/]+$/.test(p) || !d.data || d.data.productId == null) continue;
+      const u = isObj(d.data.worklogs) ? Object.values(d.data.worklogs).filter(isObj).reduce((a, w) => a + (Number(w.units) || 0), 0) : 0;
+      if (u > 0) out[p.slice(6)] = { productId: Number(d.data.productId), units: Math.round(u * 100) / 100 };
+    }
+    return out;
   }
   audit(action, entity, details) {
     return { timestamp: new Date().toISOString(), user: "Team board", action, entity, details };
@@ -122,6 +153,29 @@ class Erp {
       else { const p = db.production[qi]; if (Object.keys(f).some(k => S(p[k]) !== S(f[k]))) { const was = p.produced; Object.assign(p, f); changed = true;
         if (f.produced !== was) auditAdd.push(this.audit("Update", "Production", `${product.name}: ${f.produced} of ${qty} produced (team board)`)); } }
     }
+    // ---- stock: reported units use up materials (per the BOM) and become finished goods
+    const settings = this.store.get("config/settings") || {};
+    if (settings.consumeStock !== false) {
+      if (!isObj(db.tbStock) || !isObj(db.tbStock.booked)) { db.tbStock = { since: new Date().toISOString(), booked: this.baseline() }; changed = true; }
+      const booked = db.tbStock.booked; const cur = booked[id] || null;
+      let want;
+      if (t && !t.deleted) want = t.productId != null && units > 0 ? { productId: Number(t.productId), units: Math.round(units * 100) / 100 } : null;
+      else want = cur;                                   // a deleted task keeps what it used: the parts are gone
+      const same = cur && want && cur.productId === want.productId;
+      const delta = same ? want.units - cur.units : 0;
+      if (cur && !same) { this.book(db, cur.productId, -cur.units, auditAdd); }
+      if (want && !same) { this.book(db, want.productId, want.units, auditAdd); }
+      if (same && Math.abs(delta) > 1e-9) this.book(db, want.productId, delta, auditAdd);
+      if (S(cur) !== S(want)) { if (want) booked[id] = want; else delete booked[id]; changed = true; }
+    }
+    // ---- quality check from the team board goes to the ERP's Quality tab
+    const qi2 = db.quality.findIndex(q => q && q.taskId === id);
+    const qc = t && isObj(t.qc) && !t.deleted ? t.qc : null;
+    if (qc) {
+      const f = { date: qc.date || new Date().toISOString().slice(0, 10), product: (product && product.name) || t.productName || t.title, score: Math.round(Number(qc.score) || 0), status: ["Pass", "Rework", "Fail"].includes(qc.status) ? qc.status : "Pass", taskId: id, source: "Team board", note: String(qc.note || "").slice(0, 300) };
+      if (qi2 < 0) { db.quality.unshift({ id: nextId(db.quality), ...f }); changed = true; auditAdd.push(this.audit("Create", "Quality", `${f.product} - Score: ${f.score} (team board)`)); }
+      else if (Object.keys(f).some(k => S(db.quality[qi2][k]) !== S(f[k]))) { Object.assign(db.quality[qi2], f); changed = true; }
+    } else if (qi2 >= 0 && t && !t.deleted) { db.quality.splice(qi2, 1); changed = true; }
     if (!changed) return false;
     db.audit = [...auditAdd, ...db.audit].slice(0, 100);
     this.put(db);

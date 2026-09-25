@@ -14,7 +14,7 @@ START
    - Windows Firewall: click "Allow", so phones and laptops on the office
      network can open the board.
 
-YOUR DATA  (this changed in version 1.1)
+YOUR DATA
   Everything is saved automatically, within a second of each change, in:
       Documents\Team Board
   It stays there when you close the program, restart the PC, or install a
@@ -34,6 +34,35 @@ YOUR DATA  (this changed in version 1.1)
     logs\             technical log, useful if something goes wrong
   Copy the whole "Team Board" folder from Documents to a USB stick or cloud
   drive now and then.
+
+NEW IN VERSION 1.2
+  - Production tab: units made per day, finished products, materials needed
+    for all open orders, "runs out in N days", output per person and per
+    product, and Export to Excel.
+  - Reported units now take materials out of ERP stock (by the bill of
+    materials) and add finished products. Deleting a report puts them back.
+    (Admin > Settings can turn this off.)
+  - My work: the phone page for workers. +1 / +5 buttons, "Report...",
+    "I'm blocked". Phones open it automatically.
+  - Stand-up button: goes through the team one person at a time
+    (yesterday / today / blockers) with a timer. Arrow keys move on.
+  - TV mode has a Production slide, and a red alert with a sound when a
+    task becomes blocked ("Alerts on/off" button in TV mode).
+  - Admin > Templates: work steps, standard hours per unit and quality
+    check items for each ERP product. New tasks get them automatically.
+  - Quality check when a product task is marked as done. The result goes
+    to the ERP's Quality tab.
+  - Admin > Backups: an extra daily copy to a USB stick or cloud folder.
+  - Admin > Settings: a password for access from outside the office
+    network (blocked until you set one).
+  - Cards can be dragged on a touchscreen: press and hold, then drag.
+
+UPDATES FROM NOW ON
+  Later updates come as ONE small file (about 1.5 MB) named like
+  "Team Board update 1.2.1.asar". In Team Board: Help > Install update
+  from file, choose the file, click "Restart now". If an update ever
+  fails to start, the program sets it aside and keeps working.
+  Help > "Go back to the previous version" undoes an update.
 
 ON THE TV
   F11 = full screen. "TV mode" on the board rotates the overview, who's

@@ -1,7 +1,7 @@
 {
   "name": "team-board",
   "productName": "Team Board",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Team board and DroneForge Pro ERP in one program",
   "main": "main.js",
   "private": true,
@@ -9,11 +9,13 @@
     "build:web": "sh ../team-board/build.sh && node build-web.js",
     "serve": "node server/index.js --data ./data --port 8080",
     "start": "electron .",
-    "dist:win": "npm run build:web && electron-packager . \"Team Board\" --platform=win32 --arch=x64 --out=dist --overwrite --asar --prune=true --ignore=\"^/(dist|data|erp-source|web-src|build-web\\.js|test)($|/)\""
+    "dist:win": "npm run build:web && electron-packager . \"Team Board\" --platform=win32 --arch=x64 --out=dist --overwrite --asar --prune=true --app-version=$npm_package_version --ignore=\"^/(dist|data|erp-source|web-src|build-web\\\\.js|build-update\\\\.js|test|READ ME FIRST\\\\.txt)($|/)\" && node -e \"require('fs').copyFileSync('READ ME FIRST.txt','dist/Team Board-win32-x64/READ ME FIRST.txt')\"",
+    "dist:update": "npm run build:web && node build-update.js"
   },
   "devDependencies": {
     "@electron/packager": "^18.3.6",
     "chart.js": "3.9.1",
-    "electron": "33.2.1"
+    "electron": "33.2.1",
+    "xlsx": "^0.18.5"
   }
 }

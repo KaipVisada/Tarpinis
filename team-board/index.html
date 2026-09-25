@@ -304,6 +304,70 @@ label.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-
 .tvprog{display:flex;align-items:center;gap:.5em;font-size:.75em;color:var(--muted);white-space:nowrap}
 .tvprog .prog-track{width:5em;height:.6em}
 .erp-frame{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px solid var(--line);border-radius:8px;background:#0f1419;display:block}
+.orders{display:grid;gap:6px}
+.order{display:grid;grid-template-columns:minmax(0,1.4fr) auto minmax(120px,1fr) 4.5em;gap:12px;align-items:center;background:none;border:1px solid transparent;border-radius:8px;padding:8px 10px;text-align:left;color:var(--ink)}
+.order:hover{background:var(--surface-2);border-color:var(--line)}
+.order .o-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order .o-n{text-align:right;font-weight:700;color:var(--pink)}
+@media (max-width:640px){.order{grid-template-columns:minmax(0,1fr) auto}.order .o-p{grid-column:1/-1}.order .o-n{display:none}}
+/* My work (phones) */
+.my{max-width:640px;margin:0 auto;display:grid;gap:14px}
+.my-head{display:flex;gap:12px;align-items:center}
+.my-head .avatar{width:44px;height:44px;font-size:15px;margin:0}
+.my-head b{display:block;font-size:18px}.my-head small{color:var(--muted)}
+.my-card{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--muted);border-radius:12px;padding:14px;display:grid;gap:12px}
+.my-card.st-b-doing{border-left-color:var(--cyan)}.my-card.st-b-blocked{border-left-color:var(--red)}.my-card.st-b-review{border-left-color:var(--amber)}
+.my-card h3{margin:0;font-size:19px;line-height:1.3}
+.my-top{display:flex;gap:8px;align-items:center}
+.my-open{margin-left:auto;color:var(--accent);font-weight:700;padding:6px 4px}
+.my-blocked{margin:0;color:var(--red);font-weight:600}
+.my-taps{display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px}
+.my-tap{min-height:64px;border-radius:12px;border:1.5px solid var(--pink);background:var(--pink-soft);color:var(--ink);font-size:24px;font-weight:800;touch-action:manipulation}
+.my-tap.wide{font-size:17px;border-color:var(--line);background:var(--surface-2)}
+.my-tap:active{background:var(--pink);color:#fff}
+.my-row{display:flex;flex-wrap:wrap;gap:10px}
+.my-big{min-height:52px;font-size:16px;flex:1;min-width:140px;border-radius:10px}
+.my-form{display:grid;gap:10px;background:var(--surface-2);border-radius:10px;padding:12px}
+.my-form input{min-height:48px;font-size:18px}
+.my-empty{text-align:center;padding:40px 16px;display:grid;gap:14px;justify-items:center}
+.my-empty p{margin:0;color:var(--muted)}
+/* stand-up */
+#standup{position:fixed;inset:0;z-index:60;background:#0f2817 linear-gradient(135deg,#1a3a2a 0%,#0f2817 50%,#1a3a2a 100%);overflow:auto;padding:max(16px,env(safe-area-inset-top)) 20px 24px;font-size:clamp(15px,1.05vw,28px)}
+.su-bar{display:flex;flex-wrap:wrap;gap:.6em;align-items:center;margin-bottom:1.2em}
+.su-bar>b{font-size:1.4em;color:var(--accent);margin-right:.4em}
+.su-dots{display:flex;flex-wrap:wrap;gap:.35em;flex:1}
+.su-dots button{width:2.3em;height:2.3em;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:.75em;font-weight:700;padding:0}
+.su-dots button.done{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.su-dots button[aria-current="true"]{border-color:var(--cyan);color:var(--ink);box-shadow:0 0 0 3px rgba(0,217,255,.25)}
+.su-clock{font-size:2em;font-weight:800;min-width:3.4em;text-align:right;color:var(--ink)}
+.su-clock.warn{color:var(--amber)}.su-clock.over{color:var(--red)}
+.su-bar .btn{font-size:.85em}
+.su-person{display:flex;gap:1em;align-items:center;margin-bottom:1em}
+.su-av.avatar{width:3.4em;height:3.4em;font-size:1.3em;margin:0}
+.su-name{font-size:2.2em;margin:0}
+.su-person p{margin:.2em 0 0}
+.su-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1em}
+@media (max-width:800px){.su-cols{grid-template-columns:1fr}}
+.su-col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1em;display:grid;gap:.6em;align-content:start}
+.su-col h3{margin:0;font-size:1.1em;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.su-item{border-left:4px solid var(--accent);padding:.35em .7em;display:grid;gap:.3em;background:var(--surface-2);border-radius:6px}
+.su-item.bad{border-left-color:var(--red)}.su-item.warn{border-left-color:var(--amber)}
+.su-item small{color:var(--muted)}
+.su-big{font-size:3em;font-weight:800;color:var(--pink);margin:0}
+.su-big small{font-size:.35em;color:var(--muted)}
+#alertBar{position:fixed;top:0;left:0;right:0;z-index:70;background:var(--red);color:#fff;font-size:clamp(16px,1.2vw,28px);padding:.7em 3em .7em 1em;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#alertBar button{position:absolute;right:.6em;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#fff;font-size:1.4em}
+body.su-on #alertBar{top:auto;bottom:0}
+#alertBar.flash{animation:alertFlash 1s 4}
+@keyframes alertFlash{50%{background:#7f1d1d}}
+@media (prefers-reduced-motion:reduce){#alertBar.flash{animation:none}}
+@media (max-width:700px){#tvBtn,#suBtn{display:none}}
+.qc-list{display:grid;gap:6px;max-height:50vh;overflow:auto}
+.qc-row{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:6px;background:var(--surface-2)}
+.qc-row .seg button[data-v="fail"][aria-pressed="true"]{background:var(--red-soft);color:var(--red)}
+.card{-webkit-touch-callout:none}
+.card.lifting{opacity:.35}
+.drag-ghost{position:fixed;z-index:80;pointer-events:none;transform:rotate(2deg);box-shadow:0 18px 40px rgba(0,0,0,.6);opacity:.95}
 /* sprint overview (kept from v1) */
 .ov{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
 @media (max-width:1100px){.ov{grid-template-columns:minmax(0,1fr)}}
@@ -470,7 +534,9 @@ body.tv .chip{font-size:.8em}
     <div class="spacer"></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-v="overview">Overview</button>
+      <button role="tab" data-v="my">My work</button>
       <button role="tab" data-v="board">Board</button>
+      <button role="tab" data-v="production">Production</button>
       <button role="tab" data-v="backlog">Backlog</button>
       <button role="tab" data-v="team">Team</button>
       <button role="tab" data-v="top">Top 3</button>
@@ -482,6 +548,7 @@ body.tv .chip{font-size:.8em}
       <span id="myTimer"></span>
       <span class="save" id="saveState" role="status" aria-live="polite"><i></i><span>Connecting</span></span>
       <span id="whoBox"></span>
+      <button class="btn" id="suBtn" title="Go through the team one person at a time">Stand-up</button>
       <button class="btn" id="tvBtn" title="Full-screen view for a TV">TV mode</button>
       <button class="btn primary" id="newTask">New task</button>
     </div>
@@ -491,6 +558,8 @@ body.tv .chip{font-size:.8em}
   <div id="erpHost" hidden></div>
 </div>
 
+<div id="standup" hidden></div>
+<div id="alertBar" role="alert" hidden></div>
 <!-- task window -->
 <dialog id="twDlg" aria-label="Task"><div id="twBody"></div></dialog>
 
@@ -520,6 +589,8 @@ body.tv .chip{font-size:.8em}
   </form>
 </dialog>
 
+<!-- quality check -->
+<dialog id="qcDlg"><form class="pad" id="qcForm"></form></dialog>
 <!-- PIN -->
 <dialog id="pinDlg"><div class="pin-wrap" id="pinBody"></div></dialog>
 
@@ -557,7 +628,7 @@ const AVAIL={available:["Available","ok"],busy:["Busy","warn"],away:["Away","bad
 const KIND={comment:{label:"Comment",cls:"k-comment"},issue:{label:"Issue",cls:"k-issue"},lesson:{label:"What went wrong",cls:"k-lesson"}};
 const PRIO={1:"High",2:"Medium",3:"Low"};
 const TYPES={story:"Story",task:"Task",bug:"Bug"};
-const DEFAULT_SETTINGS={teamName:"Team board",keyPrefix:"DF",lockMinutes:3,dailyBackup:true,trashDays:30,keepDaily:14,keepOther:20};
+const DEFAULT_SETTINGS={teamName:"Team board",keyPrefix:"DF",lockMinutes:3,dailyBackup:true,trashDays:30,keepDaily:14,keepOther:20,consumeStock:true,qcOnDone:true};
 const DAY=86400000;
 const MEDAL=["#f5c451","#c9d1dc","#d08a4f"];
 const hr=v=>Math.round((+v||0)*100)/100;
@@ -585,9 +656,9 @@ const vals=o=>o&&typeof o==="object"?Object.entries(o).filter(([k,v])=>v&&typeof
 
 /* ================= state ================= */
 const state={tasks:[],members:[],sprints:[],logs:[],backups:[],settings:{...DEFAULT_SETTINGS},order:DEFAULT_ORDER.slice(),
-  view:ls.get("tb.view")||"overview",chartMode:"burndown",type:"",menuFor:null,sprintId:null,q:"",who:"",
+  view:ls.get("tb.view")||(window.innerWidth<700?"my":"overview"),chartMode:"burndown",type:"",menuFor:null,sprintId:null,q:"",who:"",
   topScope:"sprint",followActive:true,tv:false,tvSlide:0,tvPaused:false,
-  adm:{tab:"members",q:"",who:"",kind:"",show:150},loaded:{},isOwner:false};
+  adm:{tab:"members",q:"",who:"",kind:"",show:150},templates:[],prodDays:30,loaded:{},isOwner:false};
 const raw={members:{},sprints:{},tasks:{},config:{}};   // untouched documents, for backups
 let db=null,downloads=null,assets=null,userCap=null;
 const clientId=ss.get("tb.client")||uid("c");ss.set("tb.client",clientId);
@@ -701,6 +772,7 @@ const CLEAN={
     activity:vals(o.activity).map(a=>({...a,text:str(a.text,400),at:num(a.at),by:str(a.by,80)})).sort((a,b)=>a.at-b.at),
     worklogs:wl.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.at-b.at),loggedH:hr(wl.reduce((s,w)=>s+w.hours,0)),timers,
     qty:Math.max(0,Math.round(num(o.qty)*100)/100),unit:str(o.unit,20)||"units",doneUnits:Math.round(wl.reduce((s,w)=>s+w.units,0)*100)/100,
+    qc:o.qc&&typeof o.qc==="object"&&!Array.isArray(o.qc)?{score:num(o.qc.score),status:["Pass","Rework","Fail"].includes(o.qc.status)?o.qc.status:"Pass",note:str(o.qc.note,300),date:isoOk(o.qc.date)?o.qc.date:"",by:str(o.qc.by,80),items:Array.isArray(o.qc.items)?o.qc.items.slice(0,40):[]}:null,
     productId:o.productId!=null&&o.productId!==""&&isFinite(Number(o.productId))?Number(o.productId):null,productName:str(o.productName,120),
     deleted:!!o.deleted,deletedAt:num(o.deletedAt)||null,deletedBy:str(o.deletedBy,80)}},
   members:(id,o)=>({id,name:str(o.name,80)||"Unnamed",title:str(o.title,60),access:ACCESS[o.access]?o.access:"worker",
@@ -728,12 +800,15 @@ function rebuild(col){
     if(typeof s.keyPrefix==="string"&&/^[A-Za-z0-9]{1,6}$/.test(s.keyPrefix))S.keyPrefix=s.keyPrefix.toUpperCase();
     if([1,2,3,5,10,15,30,60].includes(s.lockMinutes))S.lockMinutes=s.lockMinutes;
     if(typeof s.dailyBackup==="boolean")S.dailyBackup=s.dailyBackup;
+    if(typeof s.consumeStock==="boolean")S.consumeStock=s.consumeStock;
+    if(typeof s.qcOnDone==="boolean")S.qcOnDone=s.qcOnDone;
     if([7,14,30,60,90].includes(s.trashDays))S.trashDays=s.trashDays;
     state.settings=S;return;
   }
   state[col]=Object.entries(raw[col]).map(([id,o])=>{try{return CLEAN[col](id,o||{})}catch(e){console.error(e);return null}}).filter(Boolean);
   if(col==="tasks")state.tasks.forEach(t=>{t.assignee=t.assignees[0]||null});
   if(col==="sprints")pickSprint();
+  if(col==="tasks"&&typeof watchBlocked==="function")watchBlocked();
 }
 function normOrder(o){const ok=Array.isArray(o)?o.filter((k,i)=>COLS[k]&&o.indexOf(k)===i):[];DEFAULT_ORDER.forEach(k=>{if(!ok.includes(k))ok.push(k)});return ok}
 function subscribe(col){
@@ -930,7 +1005,8 @@ function statusPatch(t,status){
 }
 function moveTask(id,status){
   return act(m=>{const t=task(id);if(!t||t.status===status)return;
-    return taskUpdate(id,statusPatch(t,status),`moved this from ${COLS[t.status]} to ${COLS[status]}`,m.id)});
+    return taskUpdate(id,statusPatch(t,status),`moved this from ${COLS[t.status]} to ${COLS[status]}`,m.id).then(ok=>{
+      if(ok&&status==="done"&&qcWanted(t))setTimeout(()=>openQc(id),150);return ok})});
 }
 const FIELD_LABEL={title:"the title",type:"the type",priority:"the priority",points:"the story points",estimateH:"the estimate",erpRef:"the ERP reference",labels:"the labels",blockedReason:"the blocked reason",description:"the description"};
 function fieldText(f,v,t){
@@ -997,6 +1073,8 @@ $("#newForm").addEventListener("submit",async e=>{
       qty:Math.max(0,+$("#nfQty").value||0),unit:$("#nfUnit").value.trim()||"units",
       productId:erpProduct($("#nfProduct").value)?Number($("#nfProduct").value):null,productName:erpProduct($("#nfProduct").value)?.name||"",
       description:"",labels:[],checklist:{},files:{},comments:{},worklogs:{},timers:{},activity:{[uid("a")]:{at:now,by:m.id,text:"created this task"}}};
+    const tp=data.productId!=null?templatePatch(data.productId,data.qty):null;
+    if(tp){data.checklist=tp.checklist;if(tp.estimateH!=null)data.estimateH=tp.estimateH;if(tp.unit&&data.unit==="units")data.unit=tp.unit}
     $("#newDlg").close();
     return enqueue("tasks/"+id,"set",data);
   });
@@ -1143,6 +1221,8 @@ twEl.addEventListener("click",async e=>{
   if(d.side){tw.side=d.side;return renderTW()}
   if(d.twdelete!=null)return trashTask(t.id);
   if(d.unassign)return removeAssignee(t.id,d.unassign);
+  if(d.qcopen!=null)return act(()=>openQc(t.id));
+  if(d.tplapply!=null)return applyTemplate(t.id);
   if(d.cltoggle){const c=t.checklist.find(x=>x.id===d.cltoggle);if(c)act(m=>taskUpdate(t.id,{checklist:{[c.id]:{done:!c.done,doneBy:!c.done?m.id:null}}},`${c.done?"unchecked":"checked"} "${c.text}"`,m.id));return}
   if(d.cldel){const c=t.checklist.find(x=>x.id===d.cldel);if(c)act(m=>taskUpdate(t.id,{checklist:{[c.id]:null}},`removed checklist item "${c.text}"`,m.id));return}
   if(d.fopen){const f=t.files.find(x=>x.id===d.fopen);if(f)openFile(f);return}
@@ -1323,12 +1403,263 @@ function workSection(t){
     :`<p class="muted" style="font-size:13px;margin:6px 0 0">This product has no bill of materials in the ERP yet, so materials can't be calculated.</p>`;
   return `<section class="tw-sec work"><h3>Work order ${t.productId!=null&&hasErp?'<small class="chip info">linked to ERP</small>':""}</h3>${edit}
     ${progHtml(t,"lg")}
-    ${t.qty?`<div><button type="button" class="btn small primary" data-side="worklog">Report today's work</button></div>`:""}
+    <div class="actions" style="margin:0">${t.qty?`<button type="button" class="btn small primary" data-side="worklog">Report today's work</button>`:""}
+      ${t.qc?`<span class="chip ${t.qc.status==="Pass"?"ok":t.qc.status==="Rework"?"warn":"bad"}">Quality: ${t.qc.status} ${t.qc.score}%</span>${admin?`<button type="button" class="btn small ghost" data-qcopen>Redo check</button>`:""}`
+        :t.status==="done"&&t.productId!=null?`<button type="button" class="btn small" data-qcopen>Record quality check</button>`:""}
+      ${admin&&t.productId!=null&&tplFor(t.productId)?`<button type="button" class="btn small ghost" data-tplapply>Apply ${esc(t.productName)} template</button>`:""}</div>
     ${mats}</section>`;
 }
 function setWork(id,patch,text){
   return act(m=>taskUpdate(id,patch,text,m.id),{admin:true}).then(ok=>{if(!ok)renderTW();return ok});
 }
+/* ================= production: output, finished goods, materials, people ================= */
+const addDays=(iso0,n)=>{const d=new Date(parseDate(iso0));d.setDate(d.getDate()+n);return iso(d)};
+function prevWorkday(ref){let d=addDays(ref||todayIso(),-1);while([0,6].includes(new Date(parseDate(d)).getDay()))d=addDays(d,-1);return d}
+const tplOf=pid=>pid==null?null:(state.templates||[]).find(x=>Number(x.id)===Number(pid))||null;
+/* every report with units, flattened */
+function unitReports(){
+  const out=[];
+  state.tasks.forEach(t=>{if(!t.qty)return;t.worklogs.forEach(w=>{if(w.units>0||w.hours>0)out.push({date:w.date,by:w.by,units:w.units,hours:w.hours,task:t,productId:t.productId,product:t.productName||t.title})})});
+  return out;
+}
+function bomOf(pid){return state.erp&&pid!=null?(state.erp.bom||[]).find(b=>b&&Number(b.product_id)===Number(pid))||null:null}
+/* what all open orders still need, against stock, with how fast each material is being used */
+function materialPlan(){
+  if(!state.erp)return [];
+  const need=new Map();
+  const add=(pid,units,label)=>{const b=bomOf(pid);if(!b||!Array.isArray(b.components)||units<=0)return;
+    b.components.forEach(c=>{const k=Number(c.id);const e=need.get(k)||{need:0,orders:new Set()};e.need+=(+c.qty||1)*units;e.orders.add(label);need.set(k,e)})};
+  liveTasks().forEach(t=>{if(t.productId!=null&&t.status!=="done")add(t.productId,Math.max(0,t.qty-t.doneUnits),shortId(t))});
+  (state.erp.planning||[]).forEach(p=>{if(p&&!p.taskId&&p.status!=="completed")add(p.product_id,+p.qty||0,"ERP plan "+(p.product||""))});
+  // use per day over the last 14 days, from what was reported
+  const from=addDays(todayIso(),-14),use=new Map();
+  unitReports().forEach(r=>{if(r.date<from||r.productId==null)return;const b=bomOf(r.productId);if(!b)return;(b.components||[]).forEach(c=>use.set(Number(c.id),(use.get(Number(c.id))||0)+(+c.qty||1)*r.units))});
+  const ids=new Set([...need.keys(),...use.keys()]);
+  return [...ids].map(id=>{const m=erpMaterial(id);const n=need.get(id);const stock=m?+m.stock||0:0;const perDay=(use.get(id)||0)/14;
+    return {id,name:m?m.name:"Material "+id,unit:m&&m.unit||"",stock,need:n?n.need:0,orders:n?[...n.orders]:[],short:Math.max(0,(n?n.need:0)-stock),perDay,days:perDay>0?stock/perDay:null,reorder:m?+m.reorder||0:0}})
+    .sort((a,b)=>(b.short>0)-(a.short>0)||(a.days??1e9)-(b.days??1e9)||b.need-a.need);
+}
+function outputByDay(days){
+  const start=addDays(todayIso(),-(days-1));const map={};for(let i=0;i<days;i++)map[addDays(start,i)]=0;
+  unitReports().forEach(r=>{if(map[r.date]!=null)map[r.date]+=r.units});return map;
+}
+function peopleStats(days){
+  const from=addDays(todayIso(),-(days-1));const rows={};
+  unitReports().forEach(r=>{if(r.date<from)return;const x=rows[r.by]=rows[r.by]||{units:0,hours:0,tasks:new Set()};x.units+=r.units;x.hours+=r.hours;x.tasks.add(r.task.id)});
+  return Object.entries(rows).map(([id,x])=>({id,units:x.units,hours:x.hours,rate:x.hours?x.units/x.hours:null,tasks:x.tasks.size})).sort((a,b)=>b.units-a.units);
+}
+function productStats(days){
+  const from=addDays(todayIso(),-(days-1));const rows={};
+  unitReports().forEach(r=>{if(r.date<from)return;const k=r.productId!=null?"p"+r.productId:"t"+r.product;const x=rows[k]=rows[k]||{pid:r.productId,name:r.product,units:0,hours:0};x.units+=r.units;x.hours+=r.hours});
+  return Object.values(rows).map(x=>{const tp=tplOf(x.pid);const std=tp&&tp.hoursPerUnit>0?tp.hoursPerUnit:null;const act=x.units>0&&x.hours>0?x.hours/x.units:null;
+    return {...x,name:(erpProduct(x.pid)||{}).name||x.name,act,std,diff:act!=null&&std?Math.round((act/std-1)*100):null}}).sort((a,b)=>b.units-a.units);
+}
+function daysText(d){if(d==null)return "–";if(d<1)return "under a day";return Math.floor(d)+" day"+(Math.floor(d)===1?"":"s")}
+function outputChart(map){
+  const days=Object.keys(map),vals=Object.values(map);const max=Math.max(1,...vals);
+  const W=640,H=200,L=30,B=26,T=14,bw=(W-L-8)/days.length;const y=v=>T+(1-v/max)*(H-T-B);
+  let grid="";for(let k=0;k<=4;k++){const v=Math.round(max*k/4);grid+=`<line x1="${L}" x2="${W-4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`}
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Units made per day">${grid}${days.map((d,i)=>{const v=map[d],x=L+i*bw+bw*.18,w=bw*.64,h=(H-T-B)*(v/max);const wk=[0,6].includes(new Date(parseDate(d)).getDay());
+    return `<rect x="${x}" y="${y(v)}" width="${w}" height="${Math.max(0,h)}" rx="3" fill="${d===todayIso()?"var(--cyan)":"var(--pink)"}" opacity="${wk?.45:1}"><title>${fmtDate(d)}: ${fmtN(v)} units</title></rect>
+      ${v?`<text x="${x+w/2}" y="${y(v)-4}" text-anchor="middle">${fmtN(v)}</text>`:""}<text x="${x+w/2}" y="${H-8}" text-anchor="middle">${new Date(parseDate(d)).toLocaleDateString(undefined,{day:"numeric",month:"numeric"})}</text>`}).join("")}</svg>
+    <div class="legend"><span><i style="background:var(--pink);height:10px"></i>Units reported</span><span><i style="background:var(--cyan);height:10px"></i>Today so far</span></div>`;
+}
+function viewProduction(){
+  const span=state.prodDays||30;const yd=prevWorkday();
+  const rep=unitReports();const ydUnits=rep.filter(r=>r.date===yd);const today=rep.filter(r=>r.date===todayIso());
+  const wkFrom=addDays(todayIso(),-6);const week=rep.filter(r=>r.date>=wkFrom).reduce((a,r)=>a+r.units,0);
+  const byProd=list=>{const m={};list.forEach(r=>{m[r.product]=(m[r.product]||0)+r.units});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+  const plan=materialPlan();const shorts=plan.filter(p=>p.short>0);const soon=plan.filter(p=>p.short===0&&p.days!=null&&p.days<7);
+  const orders=liveTasks().filter(t=>t.qty>0&&t.status!=="done").sort((a,b)=>(b.doneUnits/b.qty)-(a.doneUnits/a.qty));
+  const fg=erpProducts().filter(p=>+p.finishedStock);
+  const people=peopleStats(span),prods=productStats(span);
+  return `<div class="toolbar"><div class="seg" role="group" aria-label="Period">${[7,30,90].map(n=>`<button data-proddays="${n}" aria-pressed="${span===n}">Last ${n} days</button>`).join("")}</div>
+    <span class="goal">People and products tables cover the last ${span} days.</span><span class="spacer"></span>
+    ${isAdmin()&&downloads?`<button class="btn small" data-xlsx>Export to Excel</button>`:""}</div>
+  <div class="stats">
+    <div class="stat"><b style="color:var(--pink)">${fmtN(ydUnits.reduce((a,r)=>a+r.units,0))}</b><small>Made ${yd===addDays(todayIso(),-1)?"yesterday":"on "+fmtDate(yd)}${ydUnits.length?": "+byProd(ydUnits).map(([k,v])=>`${fmtN(v)} ${esc(k)}`).join(", "):""}</small></div>
+    <div class="stat"><b>${fmtN(today.reduce((a,r)=>a+r.units,0))}</b><small>Made today so far</small></div>
+    <div class="stat"><b>${fmtN(week)}</b><small>Made in the last 7 days</small></div>
+    <div class="stat"><b>${fmtN(fg.reduce((a,p)=>a+(+p.finishedStock||0),0))}</b><small>Finished products in stock</small></div>
+    <div class="stat"><b style="color:${shorts.length?"var(--red)":"var(--accent)"}">${shorts.length}</b><small>Materials short for open orders${soon.length?` · ${soon.length} run out within a week`:""}</small></div>
+  </div>
+  <div class="two"><div class="panel"><h2>Units made per day</h2>${outputChart(outputByDay(14))}</div>
+    <div class="panel"><h2>Finished products</h2>${state.erp?(erpProducts().length?`<table><tbody>${erpProducts().map(p=>`<tr><td>${esc(p.name)}<br><small>${esc(p.sku||"")}</small></td><td class="num"><b>${fmtN(+p.finishedStock||0)}</b></td></tr>`).join("")}</tbody></table>
+      <p class="goal" style="margin:10px 0 0;font-size:12px">Goes up when workers report units done. Materials are taken out of stock by the bill of materials at the same time.</p>`:'<div class="empty">No products in the ERP yet.</div>'):'<div class="empty">Product stock comes from the ERP in the desktop program.</div>'}</div></div>
+  <div class="panel"><h2>Open work orders · ${orders.length}</h2>${orders.length?`<div class="orders">${orders.map(t=>`<button class="order" data-open="${esc(t.id)}"><span class="o-t">${esc(shortId(t))} ${esc(t.title)}</span>${avStack(t,3)}<span class="o-p">${progHtml(t)}</span><span class="o-n">${fmtN(t.doneUnits)}/${fmtN(t.qty)}</span></button>`).join("")}</div>`:'<div class="empty">No open tasks with a quantity.</div>'}</div>
+  <div class="panel"><h2>Materials for open orders</h2>${state.erp?(plan.length?`<div class="tbl-scroll"><table><thead><tr><th>Material</th><th class="num">Still needed</th><th class="num">In stock</th><th class="num">Short</th><th class="num">Used per day</th><th>Runs out in</th></tr></thead><tbody>
+    ${plan.map(p=>`<tr><td>${esc(p.name)}${p.orders.length?`<br><small>${esc(p.orders.slice(0,4).join(", "))}${p.orders.length>4?" +"+(p.orders.length-4):""}</small>`:""}</td><td class="num">${fmtN(p.need)} ${esc(p.unit)}</td><td class="num">${fmtN(p.stock)}</td>
+      <td class="num">${p.short?`<span class="chip bad">${fmtN(p.short)}</span>`:'<span class="chip ok">0</span>'}</td><td class="num">${p.perDay?fmtN(Math.round(p.perDay*10)/10):"–"}</td>
+      <td>${p.days==null?'<span class="muted">not used lately</span>':`<span class="chip ${p.days<3?"bad":p.days<7?"warn":"ok"}">${daysText(p.days)}</span>`}</td></tr>`).join("")}</tbody></table></div>
+    <p class="goal" style="margin:10px 0 0;font-size:12px">"Still needed" adds up every open order together: team board tasks and ERP plans. "Runs out in" uses the average of the last 14 days.</p>`
+    :'<div class="empty">No bills of materials for the open orders yet. Add them in the ERP under BOM.</div>'):'<div class="empty">Material planning needs the ERP (desktop program).</div>'}</div>
+  <div class="two"><div class="panel"><h2>Output per person</h2>${people.length?`<div class="tbl-scroll"><table><thead><tr><th>Person</th><th class="num">Units</th><th class="num">Hours</th><th class="num">Units per hour</th><th class="num">Tasks</th></tr></thead><tbody>
+      ${people.map(p=>`<tr><td><div class="mname">${avatar(p.id)}<b>${esc(mName(p.id))}</b></div></td><td class="num">${fmtN(p.units)}</td><td class="num">${fmtN(p.hours)}</td><td class="num">${p.rate==null?"–":fmtN(Math.round(p.rate*100)/100)}</td><td class="num">${p.tasks}</td></tr>`).join("")}</tbody></table></div>
+      <p class="goal" style="margin:10px 0 0;font-size:12px">Units per hour only counts reports that include hours.</p>`:'<div class="empty">No reports in this period.</div>'}</div>
+    <div class="panel"><h2>Time per product</h2>${prods.length?`<div class="tbl-scroll"><table><thead><tr><th>Product</th><th class="num">Units</th><th class="num">Hours per unit</th><th class="num">Standard</th><th class="num">Difference</th></tr></thead><tbody>
+      ${prods.map(p=>`<tr><td>${esc(p.name)}</td><td class="num">${fmtN(p.units)}</td><td class="num">${p.act==null?"–":fmtN(Math.round(p.act*100)/100)}</td><td class="num">${p.std?fmtN(p.std):"–"}</td>
+        <td class="num">${p.diff==null?"–":`<span class="chip ${p.diff>15?"bad":p.diff< -5?"ok":"warn"}">${p.diff>0?"+":""}${p.diff}%</span>`}</td></tr>`).join("")}</tbody></table></div>
+      <p class="goal" style="margin:10px 0 0;font-size:12px">The standard comes from the product template (Admin, Templates).</p>`:'<div class="empty">No reports in this period.</div>'}</div></div>`;
+}
+/* ---- Excel export ---- */
+async function exportExcel(){
+  if(!downloads)return;const span=state.prodDays||30;const from=addDays(todayIso(),-(span-1));
+  const wl=[];state.tasks.forEach(t=>t.worklogs.forEach(w=>{if(w.date>=from)wl.push({Date:w.date,Person:mName(w.by),Task:shortId(t),Title:t.title,Product:t.productName||"",Units:w.units||0,Hours:w.hours||0,Note:w.note||"","ERP reference":t.erpRef||"",Status:COLS[t.status]})}));
+  wl.sort((a,b)=>a.Date<b.Date?-1:1);
+  const orders=liveTasks().filter(t=>t.qty>0).map(t=>({Task:shortId(t),Title:t.title,Product:t.productName||"",Quantity:t.qty,Done:t.doneUnits,"% done":Math.round(t.doneUnits/t.qty*100),Status:COLS[t.status],People:names(t),Sprint:sprint(t.sprintId)?.name||"Backlog"}));
+  const people=peopleStats(span).map(p=>({Person:mName(p.id),Units:p.units,Hours:p.hours,"Units per hour":p.rate==null?"":Math.round(p.rate*100)/100,Tasks:p.tasks}));
+  const prods=productStats(span).map(p=>({Product:p.name,Units:p.units,Hours:p.hours,"Hours per unit":p.act==null?"":Math.round(p.act*100)/100,Standard:p.std||"","Difference %":p.diff??""}));
+  const mats=materialPlan().map(p=>({Material:p.name,Unit:p.unit,"Still needed":p.need,"In stock":p.stock,Short:p.short,"Used per day":Math.round(p.perDay*100)/100,"Days left":p.days==null?"":Math.floor(p.days)}));
+  const name=`team-board-${todayIso()}`;
+  try{
+    if(window.XLSX){
+      const wb=XLSX.utils.book_new();const add=(rows,title)=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{"":"No data"}]);ws["!cols"]=Object.keys(rows[0]||{a:1}).map(k=>({wch:Math.max(10,Math.min(40,k.length+4))}));XLSX.utils.book_append_sheet(wb,ws,title)};
+      add(wl,"Worklogs");add(orders,"Work orders");add(people,"People");add(prods,"Products");add(mats,"Materials");
+      const buf=XLSX.write(wb,{type:"array",bookType:"xlsx"});
+      await downloads.save({filename:name+".xlsx",data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})});
+    }else{
+      const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;const csv=rows=>rows.length?[Object.keys(rows[0]).map(q).join(";"),...rows.map(r=>Object.values(r).map(q).join(";"))].join("\r\n"):"";
+      await downloads.save({filename:name+"-worklogs.csv",data:new Blob(["﻿"+csv(wl)],{type:"text/csv"})});
+    }
+    toast("Export saved");
+  }catch(e){toast("The export was not saved.")}
+}
+/* ================= My work: the phone page for workers ================= */
+const myUi={form:null,kind:null};       // which task has the report / blocked form open
+function myTasks(m){
+  const rank={doing:0,blocked:1,review:2,todo:3};
+  return liveTasks().filter(t=>isOn(t,m.id)&&t.status!=="done").sort((a,b)=>(rank[a.status]??9)-(rank[b.status]??9)||a.priority-b.priority);
+}
+function viewMy(){
+  const m=me();
+  if(!m)return `<div class="my"><div class="my-empty"><h2>My work</h2><p>Sign in with your PIN to see your tasks and report what you've done.</p>
+    <button class="btn primary my-big" data-mysignin>Sign in</button></div></div>`;
+  const list=myTasks(m);const today=todayIso();
+  const doneToday=[];state.tasks.forEach(t=>t.worklogs.forEach(w=>{if(w.by===m.id&&w.date===today)doneToday.push({t,w})}));
+  const u=doneToday.reduce((a,x)=>a+x.w.units,0),h=doneToday.reduce((a,x)=>a+x.w.hours,0);
+  return `<div class="my">
+    <div class="my-head"><div>${avatar(m.id)}</div><div><b>${esc(m.name)}</b><small>${list.length} open task${list.length===1?"":"s"}${u||h?` · today: ${u?fmtN(u)+" units":""}${u&&h?", ":""}${h?fmtH(h):""}`:""}</small></div></div>
+    ${list.length?list.map(t=>myCard(t,m)).join(""):'<div class="my-empty"><p>No open tasks for you right now.</p></div>'}
+  </div>`;
+}
+function myCard(t,m){
+  const open=myUi.form===t.id;const tap=t.qty>0;
+  const st=`<span class="st st-${t.status}">${COLS[t.status]}</span>`;
+  const actions=[];
+  if(t.status==="todo")actions.push(`<button class="btn primary my-big" data-mystatus="doing" data-id2="${esc(t.id)}">Start</button>`);
+  if(t.status==="doing")actions.push(`<button class="btn my-big" data-myform="blocked" data-id2="${esc(t.id)}">I'm blocked</button>`,`<button class="btn my-big" data-mystatus="review" data-id2="${esc(t.id)}">Ready for review</button>`);
+  if(t.status==="blocked")actions.push(`<button class="btn primary my-big" data-mystatus="doing" data-id2="${esc(t.id)}">Unblocked, carry on</button>`);
+  if(t.status==="review")actions.push(`<span class="muted" style="align-self:center">Waiting for review</span>`);
+  return `<section class="my-card st-b-${t.status}">
+    <div class="my-top">${st}<span class="c-id">${esc(shortId(t))}</span><button class="linkish my-open" data-open="${esc(t.id)}">Open</button></div>
+    <h3>${esc(t.title)}</h3>
+    ${t.status==="blocked"&&t.blockedReason?`<p class="my-blocked">Blocked: ${esc(t.blockedReason)}</p>`:""}
+    ${tap?`${progHtml(t,"md")}<div class="my-taps">
+      <button class="my-tap" data-mytap="1" data-id2="${esc(t.id)}" aria-label="Add 1 ${esc(t.unit)} done">+1</button>
+      <button class="my-tap" data-mytap="5" data-id2="${esc(t.id)}" aria-label="Add 5 ${esc(t.unit)} done">+5</button>
+      <button class="my-tap wide" data-myform="report" data-id2="${esc(t.id)}">Report…</button></div>`
+      :`<div class="my-taps"><button class="my-tap wide" data-myform="report" data-id2="${esc(t.id)}">Log time…</button></div>`}
+    ${open&&myUi.kind==="report"?`<form class="my-form" data-myreport="${esc(t.id)}">
+        ${tap?`<label>${esc(t.unit[0].toUpperCase()+t.unit.slice(1))} done today<input id="myUnits" type="number" min="0" step="1" inputmode="numeric"></label>`:""}
+        <label>Hours worked on it<input id="myHours" type="number" min="0" max="24" step="0.25" inputmode="decimal"></label>
+        <label>Note<input id="myNote" maxlength="300" placeholder="Optional"></label>
+        <div class="my-row"><button class="btn primary my-big">Save</button><button type="button" class="btn my-big" data-myclose>Cancel</button></div></form>`:""}
+    ${open&&myUi.kind==="blocked"?`<form class="my-form" data-myblock="${esc(t.id)}">
+        <label>What are you waiting for?<input id="myReason" maxlength="200" required placeholder="e.g. no M3 screws left"></label>
+        <div class="my-row"><button class="btn danger my-big">Mark as blocked</button><button type="button" class="btn my-big" data-myclose>Cancel</button></div></form>`:""}
+    <div class="my-row">${actions.join("")}</div>
+  </section>`;
+}
+/* +1 / +5: one running entry per person per task per day, so a day of taps is one line in the worklog */
+async function myTap(id,n){
+  const t=task(id);if(!t)return;
+  const ok=await act(async m=>{
+    const day=todayIso();const wid=`tap-${m.id}-${day}`;const cur=t.worklogs.find(w=>w.id===wid);
+    const units=Math.max(0,Math.round(((cur?cur.units:0)+n)*100)/100);
+    return taskUpdate(id,{worklogs:{[wid]:{by:m.id,date:day,hours:cur?cur.hours:0,units,note:cur?cur.note:"",at:Date.now()}},
+      activity:{[`a-${wid}`]:{at:Date.now(),by:m.id,text:`reported ${fmtN(units)} ${t.unit} done today`}}},null,m.id);
+  });
+  if(ok){const nt=task(id);const total=t.doneUnits+n;
+    if(t.qty&&total>=t.qty&&t.status!=="done")toast(`Target reached: ${fmtN(total)} of ${fmtN(t.qty)}. Tell your lead it's ready.`);else toast(`+${n} saved`,{label:"Undo",fn:()=>myTap(id,-n)})}
+}
+async function mySubmit(form){
+  const id=form.dataset.myreport||form.dataset.myblock;const t=task(id);if(!t)return;
+  if(form.dataset.myblock){
+    const reason=$("#myReason").value.trim();if(!reason)return;
+    const ok=await act(m=>taskUpdate(id,{...statusPatch(t,"blocked"),blockedReason:reason},`marked this as blocked: ${reason}`,m.id));
+    if(ok){myUi.form=null;render();toast("Marked as blocked. Your lead can see it on the board.")}return;
+  }
+  const units=$("#myUnits")?Math.max(0,+$("#myUnits").value||0):0,hours=Math.max(0,Math.min(24,+$("#myHours").value||0)),note=$("#myNote").value.trim();
+  if(!units&&!hours){toast("Enter the units done, the hours, or both.");return}
+  const ok=await act(m=>taskUpdate(id,{worklogs:{[uid("w")]:{by:m.id,date:todayIso(),hours,units,note,at:Date.now()}}},
+    `reported ${[units?fmtN(units)+" "+t.unit+" done":"",hours?fmtH(hours):""].filter(Boolean).join(", ")} for today`,m.id));
+  if(ok){myUi.form=null;render();toast("Report saved")}
+}
+/* ================= product templates and quality checks ================= */
+const linesOf=v=>String(v||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,60);
+function tplFor(pid){const t=tplOf(pid);if(!t)return null;
+  return {hoursPerUnit:Math.max(0,+t.hoursPerUnit||0),unit:typeof t.unit==="string"&&t.unit.trim()?t.unit.trim().slice(0,20):"",steps:Array.isArray(t.steps)?t.steps.filter(x=>typeof x==="string").slice(0,60):[],qcItems:Array.isArray(t.qcItems)?t.qcItems.filter(x=>typeof x==="string").slice(0,40):[]}}
+/* the parts of a new task that come from the product's template */
+function templatePatch(pid,qty,existingSteps=[]){
+  const t=tplFor(pid);if(!t)return null;const now=Date.now();const have=new Set(existingSteps.map(x=>x.toLowerCase()));
+  const checklist={};t.steps.forEach((s,i)=>{if(!have.has(s.toLowerCase()))checklist[uid("k")]={text:s,done:false,order:now+i}});
+  const p={checklist};if(t.hoursPerUnit&&qty)p.estimateH=Math.round(t.hoursPerUnit*qty*100)/100;if(t.unit)p.unit=t.unit;return p;
+}
+function applyTemplate(id){
+  const t=task(id);if(!t)return;const p=templatePatch(t.productId,t.qty,t.checklist.map(c=>c.text));if(!p)return;
+  return act(m=>taskUpdate(id,p,`applied the ${t.productName} template`,m.id),{admin:true}).then(ok=>{if(ok)toast("Template applied")});
+}
+/* ---- admin: Templates tab ---- */
+function admTemplates(){
+  const ps=erpProducts();
+  if(!state.erp)return `<div class="panel empty">Templates are made for products from the ERP, so they need the desktop program.</div>`;
+  if(!ps.length)return `<div class="panel empty">There are no products in the ERP yet. Add products and their bills of materials in the ERP tab first.</div>`;
+  const sel=state.adm.tpl&&erpProduct(state.adm.tpl)?state.adm.tpl:ps[0].id;const t=tplFor(sel)||{hoursPerUnit:0,unit:"",steps:[],qcItems:[]};const p=erpProduct(sel);
+  return `<div class="two"><div class="panel"><div class="panel-h"><h2>Template for</h2><select id="tplSel" aria-label="Product" style="border:1px solid var(--line);background:var(--input);border-radius:7px;padding:6px 8px">${ps.map(x=>`<option value="${esc(x.id)}"${Number(x.id)===Number(sel)?" selected":""}>${esc(x.name)}${tplOf(x.id)?" ✓":""}</option>`).join("")}</select></div>
+    <form id="tplForm" class="grid" data-pid="${esc(sel)}">
+      <label>Standard hours per unit<input id="tplHours" type="number" min="0" step="0.05" value="${t.hoursPerUnit||""}" placeholder="e.g. 1.5"></label>
+      <label>Unit name<input id="tplUnit" maxlength="20" value="${esc(t.unit)}" placeholder="units"></label>
+      <label class="full">Work steps, one per line (become the task checklist)<textarea id="tplSteps" rows="8" placeholder="Fit frame arms&#10;Mount motors&#10;Solder ESCs&#10;Flash firmware&#10;Test flight">${esc(t.steps.join("\n"))}</textarea></label>
+      <label class="full">Quality check items, one per line (asked when the task is finished)<textarea id="tplQc" rows="6" placeholder="Frame straight, no cracks&#10;All screws tight&#10;Motors spin the right way&#10;Battery holds charge">${esc(t.qcItems.join("\n"))}</textarea></label>
+      <div class="full actions"><button class="btn primary">Save template</button>${tplOf(sel)?`<button type="button" class="btn ghost" data-tpldel="${esc(sel)}">Remove template</button>`:""}</div></form></div>
+    <div class="panel"><h2>How templates are used</h2><p style="margin:0 0 8px;max-width:60ch">When someone creates a task for <b>${esc(p?p.name:"this product")}</b>, the task gets these work steps as its checklist, and its estimate is the quantity times the standard hours.</p>
+      <p style="margin:0 0 8px;max-width:60ch">When the task is marked as done, the quality check items are asked one by one. The result goes to the ERP's Quality tab.</p>
+      <p class="muted" style="margin:0;max-width:60ch">The Production tab compares the real hours per unit with this standard.</p></div></div>`;
+}
+async function saveTemplate(form){
+  const pid=form.dataset.pid;
+  await act(async m=>{
+    const data={hoursPerUnit:Math.max(0,+$("#tplHours").value||0),unit:$("#tplUnit").value.trim().slice(0,20),steps:linesOf($("#tplSteps").value),qcItems:linesOf($("#tplQc").value),updatedAt:Date.now(),updatedBy:m.id};
+    if(await enqueue("templates/"+pid,"set",data)){logEvent("settings",`saved the template for ${(erpProduct(pid)||{}).name||"a product"}`,m.id);toast("Template saved")}
+  },{admin:true});
+}
+/* ---- quality check dialog ---- */
+const qcs={id:null,res:{}};
+function openQc(id){
+  const t=task(id);if(!t)return;const tp=tplFor(t.productId);const items=tp&&tp.qcItems.length?tp.qcItems:[];
+  qcs.id=id;qcs.res={};items.forEach((x,i)=>qcs.res[i]="pass");
+  $("#qcForm").innerHTML=`<h2>Quality check: ${esc(t.title)}</h2>
+    ${items.length?`<div class="qc-list">${items.map((x,i)=>`<div class="qc-row"><span>${esc(x)}</span><div class="seg" role="group" aria-label="${esc(x)}"><button type="button" data-qc="${i}" data-v="pass" aria-pressed="true">Pass</button><button type="button" data-qc="${i}" data-v="fail" aria-pressed="false">Fail</button></div></div>`).join("")}</div>`
+      :`<p class="muted" style="margin:0 0 10px">This product has no check items yet (Admin, Templates). Record an overall result instead.</p><label>Score (%)<input id="qcScore" type="number" min="0" max="100" value="100"></label>`}
+    <div class="grid" style="margin-top:12px"><label>Result<select id="qcStatus"><option>Pass</option><option>Rework</option><option>Fail</option></select></label><label>Checked on<input id="qcDate" type="date" value="${todayIso()}" max="${todayIso()}"></label>
+      <label class="full">Note<input id="qcNote" maxlength="300" placeholder="Optional, e.g. which unit failed"></label></div>
+    <div class="actions"><button class="btn primary">Save quality check</button><button type="button" class="btn" data-qcskip>Later</button></div>`;
+  $("#qcDlg").showModal();
+}
+function qcAuto(){const v=Object.values(qcs.res);if(!v.length)return;const f=v.filter(x=>x==="fail").length;$("#qcStatus").value=!f?"Pass":f/v.length>0.5?"Fail":"Rework"}
+$("#qcForm").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.qcskip!=null){$("#qcDlg").close();toast("You can record the quality check later from the task.");return}
+  if(b.dataset.qc!=null){qcs.res[b.dataset.qc]=b.dataset.v;b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));qcAuto()}
+});
+$("#qcForm").addEventListener("submit",async e=>{
+  e.preventDefault();const t=task(qcs.id);if(!t)return;const tp=tplFor(t.productId);const items=tp?tp.qcItems:[];
+  const v=Object.values(qcs.res);const score=v.length?Math.round(v.filter(x=>x==="pass").length/v.length*100):Math.max(0,Math.min(100,+($("#qcScore")||{}).value||0));
+  const status=$("#qcStatus").value,note=$("#qcNote").value.trim(),date=$("#qcDate").value||todayIso();
+  const ok=await act(m=>taskUpdate(t.id,{qc:{score,status,note,date,by:m.id,at:Date.now(),items:items.map((x,i)=>({item:x,result:qcs.res[i]||"pass"}))}},`recorded a quality check: ${status} (${score}%)`,m.id));
+  if(ok){$("#qcDlg").close();toast(`Quality check saved: ${status}. It's in the ERP's Quality tab.`)}
+});
+const qcWanted=t=>t.productId!=null&&state.settings.qcOnDone!==false&&!t.qc;
 /* ================= shared view bits ================= */
 const TYPE_ICON={
   story:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',
@@ -1712,7 +2043,7 @@ const PEOPLE_PER_PAGE=12;
 function tvSlides(){
   const pages=Math.max(1,Math.ceil((members().length+(sprintTasks().some(t=>!t.assignees.length&&t.status!=="done")?1:0))/PEOPLE_PER_PAGE));
   const people=Array.from({length:pages},(_,i)=>["people:"+i,"Who's working on what"+(pages>1?` (${i+1} of ${pages})`:"")]);
-  return [["overview","Sprint overview"],...people,["board","Sprint board"],["top","Top 3"],["remarks","Latest issues and remarks"]];
+  return [["overview","Sprint overview"],...people,["board","Sprint board"],["production","Production"],["top","Top 3"],["remarks","Latest issues and remarks"]];
 }
 const TV_SECONDS=20;let tvElapsed=0;
 function enterTv(){state.tv=true;state.followActive=true;pickSprint();ls.set("tb.tv","1");state.tvSlide=0;tvElapsed=0;document.body.classList.add("tv");
@@ -1748,20 +2079,126 @@ function tvRemarks(){const rc=sprintRemarks(8);return rc.length?`<div class="pan
 function renderTv(){
   const slides=tvSlides();if(state.tvSlide>=slides.length)state.tvSlide=0;
   const s=sprint(state.sprintId);const [key,title]=slides[state.tvSlide];const [kind,arg]=key.split(":");
-  const body={overview:()=>viewOverview(),people:()=>tvPeople(+arg||0),board:tvBoard,top:tvTop,remarks:tvRemarks}[kind]();
+  const body={overview:()=>viewOverview(),people:()=>tvPeople(+arg||0),board:tvBoard,production:tvProduction,top:tvTop,remarks:tvRemarks}[kind]();
   $("#main").innerHTML=`<div class="tvbar"><div><h1 class="tvtitle">${esc(state.settings.teamName)}</h1>
     <div class="sub">${s?`${esc(s.name)}, ${daysLeft(s)} day${daysLeft(s)===1?"":"s"} left${s.goal?`. Goal: ${esc(s.goal)}`:""}`:""}</div></div>
     <div class="tvdots">${slides.map((x,i)=>`<button data-tvgo="${i}" aria-label="Show ${esc(x[1])}" aria-current="${i===state.tvSlide}"><i style="width:${Math.min(100,tvElapsed/TV_SECONDS*100)}%"></i></button>`).join("")}</div>
     <div class="clock" id="tvClock">${clock()}</div>
+    <button class="btn" data-tvstandup>Stand-up</button><button class="btn" data-tvalerts>${alertsOn()?"Alerts on":"Alerts off"}</button>
     <button class="btn" data-tvpause>${state.tvPaused?"Resume":"Pause"}</button><button class="btn" data-tvexit>Exit TV mode</button></div>
     <h2 class="tvslide-title">${esc(title)}</h2>${body}`;
 }
 setInterval(()=>{
   if(!state.tv)return;const c=$("#tvClock");if(c)c.textContent=clock();
-  if(state.tvPaused||document.querySelector("dialog[open]"))return;tvElapsed++;
+  if(state.tvPaused||su.on||document.querySelector("dialog[open]"))return;tvElapsed++;
   const bar=document.querySelector('.tvdots [aria-current="true"] i');if(bar)bar.style.width=Math.min(100,tvElapsed/TV_SECONDS*100)+"%";
   if(tvElapsed>=TV_SECONDS)tvGo(state.tvSlide+1);
 },1000);
+/* ================= morning stand-up: one person at a time, with a timer ================= */
+const su={on:false,i:0,start:0,paused:0,pausedAt:0,secs:90};
+function suPeople(){return members().filter(m=>m.access!=="viewer")}
+function startStandup(){su.on=true;su.i=0;su.start=Date.now();su.paused=0;su.pausedAt=0;su.secs=+ls.get("tb.suSecs")||90;$("#standup").hidden=false;document.body.classList.add("su-on");renderStandup();audioUnlock()}
+function endStandup(){su.on=false;document.body.classList.remove("su-on");$("#standup").hidden=true;$("#standup").innerHTML=""}
+function suGo(i){const n=suPeople().length+1;su.i=Math.max(0,Math.min(n-1,i));su.start=Date.now();su.paused=0;su.pausedAt=0;renderStandup()}
+function suElapsed(){return ((su.pausedAt||Date.now())-su.start-su.paused)/1000}
+function suYesterday(m){
+  const d=prevWorkday();const items=[];
+  state.tasks.forEach(t=>{
+    const w=t.worklogs.filter(x=>x.by===m.id&&x.date===d);
+    const u=w.reduce((a,x)=>a+x.units,0),h=w.reduce((a,x)=>a+x.hours,0);
+    const moved=t.activity.filter(a=>a.by===m.id&&iso(new Date(a.at))===d&&/^moved this|^marked this/.test(a.text)).map(a=>a.text.replace(/^moved this /,"moved "));
+    if(u||h||moved.length)items.push({t,u,h,moved});
+  });
+  return {d,items};
+}
+function renderStandup(){
+  const box=$("#standup");if(!su.on||!box)return;
+  const ppl=suPeople();const last=su.i>=ppl.length;
+  const dots=`<div class="su-dots">${ppl.map((p,i)=>`<button data-sugo="${i}" aria-label="${esc(p.name)}" aria-current="${i===su.i}" class="${i<su.i?"done":""}">${esc(initials(p.name))}</button>`).join("")}<button data-sugo="${ppl.length}" aria-current="${last}" aria-label="Summary">∑</button></div>`;
+  const bar=`<div class="su-bar"><b>Stand-up</b>${dots}<span class="su-clock" id="suClock"></span>
+    <button class="btn" data-suprev>‹ Back</button><button class="btn" data-supause>${su.pausedAt?"Resume":"Pause"}</button><button class="btn primary" data-sunext>${last?"Finish":"Next person ›"}</button><button class="btn" data-suend>Close</button></div>`;
+  if(last){
+    const blocked=sprintTasks().filter(t=>t.status==="blocked");const yd=prevWorkday();
+    const units=unitReports().filter(r=>r.date===yd).reduce((a,r)=>a+r.units,0);
+    const shorts=materialPlan().filter(p=>p.short>0);
+    box.innerHTML=`${bar}<div class="su-body"><h2 class="su-name">Summary</h2><div class="su-cols">
+      <div class="su-col"><h3>Made on ${fmtDate(yd)}</h3><p class="su-big">${fmtN(units)} <small>units</small></p></div>
+      <div class="su-col"><h3>Blocked now</h3>${blocked.length?blocked.map(t=>`<div class="su-item bad"><b>${esc(shortId(t))} ${esc(t.title)}</b><small>${esc(t.blockedReason||"no reason given")} · ${esc(names(t)||"no one")}</small></div>`).join(""):'<p class="muted">Nothing is blocked.</p>'}</div>
+      <div class="su-col"><h3>Materials short</h3>${shorts.length?shorts.slice(0,8).map(p=>`<div class="su-item bad"><b>${esc(p.name)}</b><small>short ${fmtN(p.short)} ${esc(p.unit)}</small></div>`).join(""):'<p class="muted">Nothing is short for the open orders.</p>'}</div></div></div>`;
+    tickStandup();return;
+  }
+  const m=ppl[su.i];const y=suYesterday(m);const off=offToday(m);
+  const open=liveTasks().filter(t=>isOn(t,m.id)&&t.status!=="done").sort((a,b)=>({doing:0,blocked:1,review:2,todo:3}[a.status]??9)-({doing:0,blocked:1,review:2,todo:3}[b.status]??9));
+  const issues=[];liveTasks().filter(t=>isOn(t,m.id)).forEach(t=>t.comments.filter(c=>c.kind==="issue"&&!c.resolved).forEach(c=>issues.push({t,c})));
+  box.innerHTML=`${bar}<div class="su-body"><div class="su-person">${avatar(m.id,"su-av")}<div><h2 class="su-name">${esc(m.name)}</h2><p class="muted">${esc(m.title||"")}${off?` · <span class="chip bad">Off today${off.note?": "+esc(off.note):""}</span>`:""}</p></div></div>
+    <div class="su-cols">
+      <div class="su-col"><h3>${y.d===addDays(todayIso(),-1)?"Yesterday":fmtDate(y.d)}</h3>${y.items.length?y.items.map(x=>`<div class="su-item"><b>${esc(x.t.title)}</b><small>${[x.u?fmtN(x.u)+" "+esc(x.t.unit)+" done":"",x.h?fmtH(x.h):"",...x.moved.map(esc)].filter(Boolean).join(" · ")}</small></div>`).join(""):'<p class="muted">Nothing reported.</p>'}</div>
+      <div class="su-col"><h3>Today</h3>${open.filter(t=>t.status!=="blocked").map(t=>`<div class="su-item"><b><span class="st st-${t.status}">${COLS[t.status]}</span> ${esc(t.title)}</b>${t.qty?progHtml(t):""}</div>`).join("")||'<p class="muted">No open tasks.</p>'}</div>
+      <div class="su-col"><h3>Blockers</h3>${open.filter(t=>t.status==="blocked").map(t=>`<div class="su-item bad"><b>${esc(t.title)}</b><small>${esc(t.blockedReason||"no reason given")}</small></div>`).join("")}
+        ${issues.map(({t,c})=>`<div class="su-item warn"><b>Issue on ${esc(t.title)}</b><small>${esc(c.text.slice(0,140))}</small></div>`).join("")}
+        ${!open.some(t=>t.status==="blocked")&&!issues.length?'<p class="muted">None.</p>':""}</div>
+    </div></div>`;
+  tickStandup();
+}
+function tickStandup(){
+  const c=$("#suClock");if(!c||!su.on)return;
+  if(su.i>=suPeople().length){c.textContent="";return}
+  const left=Math.round(su.secs-suElapsed());const a=Math.abs(left);
+  c.textContent=(left<0?"+":"")+Math.floor(a/60)+":"+String(a%60).padStart(2,"0");
+  c.className="su-clock"+(left<0?" over":left<=15?" warn":"");
+}
+setInterval(()=>{if(su.on)tickStandup()},500);
+$("#standup").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  if(d.sugo!=null)return suGo(+d.sugo);
+  if(d.sunext!=null)return su.i>=suPeople().length?endStandup():suGo(su.i+1);
+  if(d.suprev!=null)return suGo(su.i-1);
+  if(d.suend!=null)return endStandup();
+  if(d.supause!=null){if(su.pausedAt){su.paused+=Date.now()-su.pausedAt;su.pausedAt=0}else su.pausedAt=Date.now();renderStandup()}
+});
+document.addEventListener("keydown",e=>{
+  if(!su.on||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+  if(e.key==="ArrowRight"){e.preventDefault();su.i>=suPeople().length?endStandup():suGo(su.i+1)}
+  else if(e.key==="ArrowLeft"){e.preventDefault();suGo(su.i-1)}
+  else if(e.key==="Escape")endStandup();
+},true);
+
+/* ================= TV: production slide ================= */
+function tvProduction(){
+  const yd=prevWorkday();const rep=unitReports();const ydU=rep.filter(r=>r.date===yd).reduce((a,r)=>a+r.units,0);
+  const tdU=rep.filter(r=>r.date===todayIso()).reduce((a,r)=>a+r.units,0);
+  const plan=materialPlan();const shorts=plan.filter(p=>p.short>0);const soon=plan.filter(p=>!p.short&&p.days!=null&&p.days<7);
+  return `<div class="stats"><div class="stat"><b style="color:var(--pink)">${fmtN(ydU)}</b><small>Made ${yd===addDays(todayIso(),-1)?"yesterday":"on "+fmtDate(yd)}</small></div>
+      <div class="stat"><b>${fmtN(tdU)}</b><small>Made today so far</small></div>
+      <div class="stat"><b style="color:${shorts.length?"var(--red)":"var(--accent)"}">${shorts.length}</b><small>Materials short</small></div></div>
+    <div class="two"><div class="panel">${outputChart(outputByDay(14))}</div>
+      <div class="panel"><h2>Watch out</h2>${[...shorts.map(p=>`<div class="su-item bad"><b>${esc(p.name)}</b><small>short ${fmtN(p.short)} ${esc(p.unit)} for open orders</small></div>`),
+        ...soon.map(p=>`<div class="su-item warn"><b>${esc(p.name)}</b><small>runs out in ${daysText(p.days)} at the current pace</small></div>`)].slice(0,7).join("")||'<p class="muted">Materials are fine for all open orders.</p>'}</div></div>`;
+}
+
+/* ================= alert when something becomes blocked ================= */
+let actx=null;
+function audioUnlock(){try{if(!actx){const A=window.AudioContext||window.webkitAudioContext;if(A)actx=new A()}if(actx&&actx.state==="suspended")actx.resume()}catch(e){}}
+document.addEventListener("pointerdown",audioUnlock,{once:true});
+function beep(){
+  try{audioUnlock();if(!actx)return;const t0=actx.currentTime;
+    [[880,0],[660,.22],[880,.44]].forEach(([f,s])=>{const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.0001,t0+s);g.gain.exponentialRampToValueAtTime(.35,t0+s+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+s+.2);o.connect(g).connect(actx.destination);o.start(t0+s);o.stop(t0+s+.22)});
+  }catch(e){}
+}
+const alertsOn=()=>{const v=ls.get("tb.alerts");return v?v==="1":state.tv};
+let prevStatus=null;
+function watchBlocked(){
+  const now=new Map(state.tasks.map(t=>[t.id,t.deleted?"deleted":t.status]));
+  if(prevStatus){state.tasks.forEach(t=>{if(!t.deleted&&t.status==="blocked"&&prevStatus.has(t.id)&&prevStatus.get(t.id)!=="blocked")blockedAlert(t)})}
+  prevStatus=now;
+}
+function blockedAlert(t){
+  if(!alertsOn())return;
+  const el=$("#alertBar");el.innerHTML=`<b>Blocked:</b> ${esc(shortId(t))} ${esc(t.title)}${t.blockedReason?` · ${esc(t.blockedReason)}`:""}${t.assignees.length?` · ${esc(names(t))}`:""}<button type="button" aria-label="Dismiss">×</button>`;
+  el.hidden=false;el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash");beep();
+  clearTimeout(blockedAlert._t);blockedAlert._t=setTimeout(()=>{el.hidden=true},20000);
+}
+$("#alertBar").addEventListener("click",()=>{$("#alertBar").hidden=true});
 /* ================= backups =================
    A backup is one metadata document plus the data split into parts
    (documents are capped at 256 KB). Parts are written first, the
@@ -1835,9 +2272,9 @@ async function purgeTrash(m,silent){
 /* ================= admin view ================= */
 function viewAdmin(){
   const m=me();if(!m||m.access!=="admin"){state.view="overview";return viewOverview()}
-  const tabs=[["members","Members"],["activity","Activity log"],["backups","Backups"],["trash","Trash"],["settings","Settings"]];
+  const tabs=[["members","Members"],["activity","Activity log"],["backups","Backups"],["trash","Trash"],["templates","Templates"],["settings","Settings"]];
   const trashN=["tasks","members","sprints"].reduce((a,c)=>a+state[c].filter(x=>x.deleted).length,0);
-  const body={members:admMembers,activity:admActivity,backups:admBackups,trash:admTrash,settings:admSettings}[state.adm.tab]();
+  const body={members:admMembers,activity:admActivity,backups:admBackups,trash:admTrash,templates:admTemplates,settings:admSettings}[state.adm.tab]();
   return `<div class="adm-nav"><div class="seg" role="group" aria-label="Admin sections">${tabs.map(([k,l])=>`<button data-adm="${k}" aria-pressed="${state.adm.tab===k}">${l}${k==="trash"&&trashN?` (${trashN})`:""}</button>`).join("")}</div>
     <span class="goal">Signed in as ${esc(m.name)} (admin)</span></div>${body}`;
 }
@@ -1891,7 +2328,7 @@ function admBackups(){
       <td><small>${b.counts.tasks} tasks, ${b.counts.members} people, ${b.counts.sprints} sprints</small></td><td class="num">${fmtBytes(b.size)}</td>
       <td class="num" style="white-space:nowrap"><button class="btn small" data-brestore="${esc(b.id)}">Restore</button>${downloads?` <button class="btn small ghost" data-bdl="${esc(b.id)}">Download</button>`:""} <button class="xbtn" data-bdel="${esc(b.id)}" aria-label="Delete backup">×</button></td></tr>`).join("")}</tbody></table></div>`
       :'<div class="empty">No backups yet. Use Back up now to make the first one.</div>'}
-    <p class="goal" style="margin:12px 0 0">Storage: about ${docs} of 5,000 records used.</p></div>`;
+    ${window.__desktop?`<p class="goal" style="margin:12px 0 0">The program also saves a full copy of all data to the backups folder on this PC every day (Menu, Team Board, Open the backups folder).</p>`:`<p class="goal" style="margin:12px 0 0">Storage: about ${docs} of 5,000 records used.</p>`}</div>${deskCopyPanel()}`;
 }
 function admTrash(){
   const items=[];
@@ -1915,11 +2352,13 @@ function admSettings(){
     <label>Lock after inactivity<select id="setLock">${[1,2,3,5,10,15,30,60].map(n=>`<option value="${n}"${S.lockMinutes===n?" selected":""}>${n} minute${n>1?"s":""}</option>`).join("")}</select></label>
     <label>Keep deleted items<select id="setTrash">${[7,14,30,60,90].map(n=>`<option value="${n}"${S.trashDays===n?" selected":""}>${n} days</option>`).join("")}</select></label>
     <label class="check" style="align-self:end"><input type="checkbox" id="setDaily"${S.dailyBackup?" checked":""}> Automatic daily backup</label>
+    <label class="check full"><input type="checkbox" id="setQc"${S.qcOnDone?" checked":""}> Ask for a quality check when a product task is marked as done</label>
+    ${window.__desktop?`<label class="check full"><input type="checkbox" id="setStock"${S.consumeStock?" checked":""}> Take materials out of ERP stock and add finished products as units are reported</label>`:""}
     <div class="full actions" style="margin-top:4px"><button class="btn primary">Save settings</button></div></form>
     <p class="adm-note" style="margin-top:12px">A short lock time suits a shared TV or tablet. Task numbers look like #${esc(S.keyPrefix)}-12.</p></div>
     <div class="panel"><h2>Danger zone</h2><div class="danger-zone"><h3>Delete all board data</h3>
       <p style="margin:0;color:var(--muted);font-size:14px">Removes every task, sprint, member, PIN and log entry. Backups are kept, and a safety backup is made first, so you can restore from the Backups tab after setting up a new admin.</p>
-      <div><button class="btn danger" data-wipe>Delete all data</button></div></div></div></div>`;
+      <div><button class="btn danger" data-wipe>Delete all data</button></div></div></div></div>${deskRemotePanel()}`;
 }
 
 /* ---- member editor ---- */
@@ -1986,6 +2425,9 @@ $("#memForm").addEventListener("submit",async e=>{
 async function adminClick(d){
   if(d.adm){state.adm.tab=d.adm;state.adm.q="";state.adm.show=150;render();
     if(d.adm==="trash"||d.adm==="activity")act(m=>purgeTrash(m),{admin:true});return true}
+  if(d.copynow!=null){act(async()=>{try{desk.copy=await deskPost("/api/backup-copy",{run:true});render();toast(desk.copy.error?"The copy failed: "+desk.copy.error:"Copied")}catch(e){toast(e.message)}},{admin:true});return true}
+  if(d.remoteoff!=null){act(async m=>{if(!await ask({title:"Turn off access from outside?",body:"People outside the office network will be blocked. The office network isn't affected.",ok:"Turn off"}))return;
+    try{desk.remote=await deskPost("/api/remote",{enabled:false});logEvent("security","turned off access from outside the office",m.id);render();toast("Outside access is off")}catch(e){toast(e.message)}},{admin:true});return true}
   if(d.madd!=null){act(()=>openMember(null),{admin:true});return true}
   if(d.medit){act(()=>openMember(d.medit),{admin:true});return true}
   if(d.mpin){const x=member(d.mpin);if(x)act(async m=>{if(!await ask({title:`Reset ${x.name}'s PIN?`,body:"They create a new PIN the next time they change something.",ok:"Reset PIN"}))return;
@@ -2030,12 +2472,38 @@ $("#importFile").addEventListener("change",async e=>{
 function saveSettings(){
   return act(async m=>{
     const p=$("#setPrefix").value.trim().toUpperCase();if(!/^[A-Z0-9]{1,6}$/.test(p)){toast("The prefix can be 1 to 6 letters or digits.");return}
-    const data={teamName:$("#setName").value.trim()||"Team board",keyPrefix:p,lockMinutes:+$("#setLock").value,trashDays:+$("#setTrash").value,dailyBackup:$("#setDaily").checked};
+    const data={teamName:$("#setName").value.trim()||"Team board",keyPrefix:p,lockMinutes:+$("#setLock").value,trashDays:+$("#setTrash").value,dailyBackup:$("#setDaily").checked,qcOnDone:$("#setQc").checked,consumeStock:$("#setStock")?$("#setStock").checked:state.settings.consumeStock};
     if(await enqueue("config/settings","set",data)){logEvent("settings","changed the settings",m.id);toast("Settings saved")}
   },{admin:true});
 }
+
+/* ================= desktop program: extra backup copy and remote access ================= */
+const desk={copy:null,remote:null,loading:false};
+async function deskLoad(){
+  if(!window.__desktop||desk.loading)return;desk.loading=true;
+  try{const [c,r]=await Promise.all([fetch("/api/backup-copy").then(x=>x.json()),fetch("/api/remote").then(x=>x.json())]);desk.copy=c;desk.remote=r}catch(e){}
+  desk.loading=false;render();
+}
+async function deskPost(url,body){const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||"That didn't work.");return j}
+function deskCopyPanel(){
+  if(!window.__desktop)return "";const c=desk.copy;
+  if(!c){deskLoad();return `<div class="panel"><h2>Extra copy on a USB stick or cloud drive</h2><div class="empty">Loading…</div></div>`}
+  return `<div class="panel"><h2>Extra copy on a USB stick or cloud drive</h2>
+    <p class="adm-note">If this PC's disk fails, the backups above are lost with it. Once a day, the program can also copy everything to another folder: a USB stick, OneDrive, Google Drive or a network drive. The last 30 days are kept there.</p>
+    <form id="copyForm" class="row-form"><input id="copyDir" style="flex:1 1 320px" value="${esc(c.dir)}" placeholder="e.g. E:\\ or C:\\Users\\Kai\\OneDrive"><button class="btn primary">Save folder</button>${c.dir?`<button type="button" class="btn" data-copynow>Copy now</button>`:""}</form>
+    <p style="margin:10px 0 0;font-size:14px">${c.error?`<span class="chip bad">Last copy failed</span> ${esc(c.error)}`:c.lastCopy?`<span class="chip ok">Copied</span> ${fmtStamp(c.lastCopy)} to ${esc(c.dir)}\\Team Board backups`:c.dir?"Not copied yet.":'<span class="muted">No folder chosen, so no extra copy is made.</span>'}</p></div>`;
+}
+function deskRemotePanel(){
+  if(!window.__desktop)return "";const r=desk.remote;
+  if(!r){deskLoad();return ""}
+  return `<div class="panel"><h2>Access from outside the office</h2>
+    <p class="adm-note">Phones and laptops on the office network always get in. From anywhere else (for example over Tailscale from home), the board asks for this password first. PINs alone are too weak for that.</p>
+    <p style="margin:0 0 10px"><span class="chip ${r.enabled?"ok":""}">${r.enabled?"On":"Off"}</span> ${r.enabled?`Password set ${r.setAt?fmtDay(r.setAt):""}.`:"Outside access is blocked."}</p>
+    <form id="remoteForm" class="row-form"><input id="remotePw" type="password" autocomplete="new-password" minlength="8" placeholder="${r.enabled?"New password (optional)":"Password, at least 8 characters"}" style="flex:1 1 240px">
+      <button class="btn primary">${r.enabled?"Change password":"Turn on"}</button>${r.enabled?`<button type="button" class="btn danger" data-remoteoff>Turn off</button>`:""}</form></div>`;
+}
 /* ================= render ================= */
-const VIEWS={overview:viewOverview,board:viewBoard,backlog:viewBacklog,team:viewTeam,top:viewTop,insights:viewInsights,admin:viewAdmin};
+const VIEWS={overview:viewOverview,my:viewMy,production:viewProduction,board:viewBoard,backlog:viewBacklog,team:viewTeam,top:viewTop,insights:viewInsights,admin:viewAdmin};
 function render(){
   try{
     document.title=state.settings.teamName;$("#teamName").textContent=state.settings.teamName;
@@ -2092,10 +2560,11 @@ document.addEventListener("click",e=>{if(e.target.id==="crashReload"){setNotice(
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){state.view=b.dataset.v;ls.set("tb.view",state.view==="admin"||state.view==="erp"?"":state.view);render()}});
 function chooseSprint(id){state.sprintId=id;state.followActive=sprint(id)?.state==="active";render()}
 $("#sprintSel").addEventListener("change",e=>chooseSprint(e.target.value));
-$("#tvBtn").addEventListener("click",enterTv);
+$("#tvBtn").addEventListener("click",()=>{audioUnlock();enterTv()});
+$("#suBtn").addEventListener("click",startStandup);
 $("#newTask").addEventListener("click",()=>openNew({sprintId:["board","overview"].includes(state.view)?state.sprintId:""}));
 document.addEventListener("keydown",e=>{
-  if(!state.tv||document.querySelector("dialog[open]")||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+  if(!state.tv||su.on||document.querySelector("dialog[open]")||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
   if(e.key===" "&&e.target.tagName==="BUTTON")return;
   if(e.key==="ArrowRight")tvGo(state.tvSlide+1);else if(e.key==="ArrowLeft")tvGo(state.tvSlide-1);
   else if(e.key==="Escape")exitTv();else if(e.key===" "){e.preventDefault();state.tvPaused=!state.tvPaused;render()}
@@ -2111,13 +2580,23 @@ main.addEventListener("change",async e=>{
   if(t.id==="typeF"){state.type=t.value;render()}
   if(t.id==="admWho"){state.adm.who=t.value;render()}
   if(t.id==="admKind"){state.adm.kind=t.value;render()}
+  if(t.id==="tplSel"){state.adm.tpl=t.value;render()}
   if(t.dataset.plan&&t.value){const id=t.dataset.plan,sid=t.value;const ok=await act(m=>taskUpdate(id,{sprintId:sid},`moved this to ${sprintName(sid)}`,m.id));if(ok)toast("Moved to "+sprintName(sid));else render()}
 });
 main.addEventListener("click",async e=>{
+  if(Date.now()<noClickUntil){e.preventDefault();return}
   const b=e.target.closest("button,[data-id]");if(!b)return;const d=b.dataset;
   if(await adminClick(d))return;
+  if(d.mysignin!=null)return who();
+  if(d.tpldel){const pid=d.tpldel;act(async m=>{if(!await ask({title:"Remove this template?",body:"Existing tasks keep their checklists.",ok:"Remove",danger:true}))return;await enqueue("templates/"+pid,"delete");toast("Template removed")},{admin:true});return}
+  if(d.mystatus)return moveTask(d.id2,d.mystatus);
+  if(d.myform){myUi.form=d.id2;myUi.kind=d.myform;render();const f=$(d.myform==="blocked"?"#myReason":($("#myUnits")?"#myUnits":"#myHours"));if(f)f.focus();return}
+  if(d.myclose!=null){myUi.form=null;return render()}
+  if(d.mytap)return myTap(d.id2,+d.mytap);
   if(d.colmove){const id=d.colmove;state.menuFor=null;await moveColumn(id,state.order.indexOf(id)+Number(d.dir));return}
   if(d.tvgo!=null)return tvGo(+d.tvgo);
+  if(d.tvstandup!=null)return startStandup();
+  if(d.tvalerts!=null){ls.set("tb.alerts",alertsOn()?"0":"1");if(alertsOn()){audioUnlock();beep()}return render()}
   if(d.tvpause!=null){state.tvPaused=!state.tvPaused;return render()}
   if(d.tvexit!=null)return exitTv();
   if(d.scope){state.topScope=d.scope;return render()}
@@ -2135,12 +2614,18 @@ main.addEventListener("click",async e=>{
   if(d.goadmin){state.view="admin";state.adm.tab=d.goadmin;return render()}
   if(d.planweek!=null){act(async m=>{const nw=nextWeek();if(await enqueue("sprints/"+uid("s"),"set",{...nw,goal:"",state:"planned"})){logEvent("sprint",`planned ${nw.name}`,m.id);toast(`${nw.name} planned`)}});return}
   if(d.export!=null)return exportCsv();
+  if(d.xlsx!=null)return exportExcel();
+  if(d.proddays){state.prodDays=+d.proddays;return render()}
   if(d.open)return openTW(d.open);
   if(b.classList.contains("card"))return openTW(d.id);
 });
 main.addEventListener("submit",async e=>{
   e.preventDefault();const f=e.target;
   if(f.id==="setForm")return saveSettings();
+  if(f.id==="tplForm")return saveTemplate(f);
+  if(f.id==="copyForm")return act(async m=>{try{desk.copy=await deskPost("/api/backup-copy",{dir:$("#copyDir").value});logEvent("backup",`set the extra backup folder to ${desk.copy.dir||"none"}`,m.id);render();toast(desk.copy.error?"Saved, but the copy failed: "+desk.copy.error:desk.copy.dir?"Folder saved and first copy made":"Extra copy turned off")}catch(e){toast(e.message)}},{admin:true});
+  if(f.id==="remoteForm")return act(async m=>{const pw=$("#remotePw").value;try{desk.remote=await deskPost("/api/remote",{enabled:true,password:pw});logEvent("security",pw?"set the password for access from outside":"turned on access from outside",m.id);render();toast("Outside access is on")}catch(e){toast(e.message)}},{admin:true});
+  if(f.dataset.myreport||f.dataset.myblock)return mySubmit(f);
   if(f.id==="sprintForm"){
     const name=$("#spName").value.trim(),start=$("#spStart").value,end=$("#spEnd").value,goal=$("#spGoal").value.trim();
     if(!name)return;if(!isoOk(start)||!isoOk(end)||end<start){toast("The end date can't be before the start date.");return}
@@ -2174,6 +2659,30 @@ main.addEventListener("drop",e=>{
   clearMarks();moveColumn(id,rest.indexOf(target)+(side==="after"?1:0));
 });
 main.addEventListener("dragend",()=>{dragKind=dragId=null;clearMarks()});
+/* touchscreens: press and hold a card for a moment, then drag it to another column */
+let td=null,noClickUntil=0;
+function tdEnd(){if(!td)return;clearTimeout(td.timer);if(td.ghost)td.ghost.remove();if(td.el)td.el.classList.remove("lifting");clearMarks();td=null}
+main.addEventListener("touchstart",e=>{
+  const c=e.target.closest(".card");if(!c||e.touches.length>1||e.target.closest("button"))return;
+  const p=e.touches[0];tdEnd();
+  td={id:c.dataset.id,el:c,x:p.clientX,y:p.clientY,active:false,timer:setTimeout(()=>{
+    if(!td)return;td.active=true;c.classList.add("lifting");try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}
+    const r=c.getBoundingClientRect();const g=c.cloneNode(true);g.className+=" drag-ghost";g.style.width=r.width+"px";g.style.left=(td.x-r.width/2)+"px";g.style.top=(td.y-20)+"px";document.body.appendChild(g);td.ghost=g;td.w=r.width},380)};
+},{passive:true});
+main.addEventListener("touchmove",e=>{
+  if(!td)return;const p=e.touches[0];
+  if(!td.active){if(Math.hypot(p.clientX-td.x,p.clientY-td.y)>10)tdEnd();return}
+  e.preventDefault();
+  td.ghost.style.left=(p.clientX-td.w/2)+"px";td.ghost.style.top=(p.clientY-20)+"px";td.lx=p.clientX;td.ly=p.clientY;
+  td.ghost.style.pointerEvents="none";const under=document.elementFromPoint(p.clientX,p.clientY);const col=under&&under.closest(".col");
+  document.querySelectorAll(".col.over").forEach(x=>{if(x!==col)x.classList.remove("over")});if(col)col.classList.add("over");
+  const sc=$(".board-scroll");if(sc){const r=sc.getBoundingClientRect();if(p.clientX>r.right-40)sc.scrollLeft+=12;else if(p.clientX<r.left+40)sc.scrollLeft-=12}
+},{passive:false});
+main.addEventListener("touchend",()=>{
+  if(!td)return;if(td.active){noClickUntil=Date.now()+500;const under=td.lx!=null?document.elementFromPoint(td.lx,td.ly):null;const col=under&&under.closest(".col");const id=td.id;tdEnd();if(col)moveTask(id,col.dataset.status);return}
+  tdEnd();
+});
+main.addEventListener("touchcancel",tdEnd);
 
 /* ================= start ================= */
 if(location.hash==="#tv"||ls.get("tb.tv")==="1"){state.tv=true;document.body.classList.add("tv")}
@@ -2190,6 +2699,7 @@ render();
   db.collection("config").onSnapshot(s=>{const r={};s.docs.forEach(x=>{r[x.id]=x.data()});raw.config=r;rebuild("config");state.loaded.config=true;render();maybeDailyBackup()},snapErr);
   db.collection("log").where("day",">=",iso(new Date(Date.now()-400*DAY))).onSnapshot(s=>{state.logs=s.docs.map(x=>({day:x.id,...x.data()}));if(state.view==="admin")render()},snapErr);
   db.collection("backups").onSnapshot(s=>{state.backups=s.docs.map(x=>{const o=x.data();return {id:x.id,kind:str(o.kind,20)||"manual",note:str(o.note,200),by:typeof o.by==="string"?o.by:null,at:num(o.at),day:str(o.day,10),parts:Math.max(1,num(o.parts,1)),size:num(o.size),counts:{tasks:0,members:0,sprints:0,...(o.counts||{})}}});state.loaded.backups=true;if(state.view==="admin")render();maybeDailyBackup()},snapErr);
+  db.collection("templates").onSnapshot(s=>{state.templates=s.docs.map(x=>({id:x.id,...x.data()}));render()},()=>{});
   db.doc("erp/main").onSnapshot(s=>{state.erp=s.exists?s.data():null;if(state.view!=="erp")render();else if($("#twDlg").open)renderTW()},()=>{});
   if(Q.ops.length){toast(`Saving ${Q.ops.length} change${Q.ops.length>1?"s":""} left over from last time`);pump()}
 })();

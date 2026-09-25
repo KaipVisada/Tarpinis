@@ -1,5 +1,5 @@
 /* ================= render ================= */
-const VIEWS={overview:viewOverview,board:viewBoard,backlog:viewBacklog,team:viewTeam,top:viewTop,insights:viewInsights,admin:viewAdmin};
+const VIEWS={overview:viewOverview,my:viewMy,production:viewProduction,board:viewBoard,backlog:viewBacklog,team:viewTeam,top:viewTop,insights:viewInsights,admin:viewAdmin};
 function render(){
   try{
     document.title=state.settings.teamName;$("#teamName").textContent=state.settings.teamName;
@@ -56,10 +56,11 @@ document.addEventListener("click",e=>{if(e.target.id==="crashReload"){setNotice(
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){state.view=b.dataset.v;ls.set("tb.view",state.view==="admin"||state.view==="erp"?"":state.view);render()}});
 function chooseSprint(id){state.sprintId=id;state.followActive=sprint(id)?.state==="active";render()}
 $("#sprintSel").addEventListener("change",e=>chooseSprint(e.target.value));
-$("#tvBtn").addEventListener("click",enterTv);
+$("#tvBtn").addEventListener("click",()=>{audioUnlock();enterTv()});
+$("#suBtn").addEventListener("click",startStandup);
 $("#newTask").addEventListener("click",()=>openNew({sprintId:["board","overview"].includes(state.view)?state.sprintId:""}));
 document.addEventListener("keydown",e=>{
-  if(!state.tv||document.querySelector("dialog[open]")||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+  if(!state.tv||su.on||document.querySelector("dialog[open]")||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
   if(e.key===" "&&e.target.tagName==="BUTTON")return;
   if(e.key==="ArrowRight")tvGo(state.tvSlide+1);else if(e.key==="ArrowLeft")tvGo(state.tvSlide-1);
   else if(e.key==="Escape")exitTv();else if(e.key===" "){e.preventDefault();state.tvPaused=!state.tvPaused;render()}
@@ -75,13 +76,23 @@ main.addEventListener("change",async e=>{
   if(t.id==="typeF"){state.type=t.value;render()}
   if(t.id==="admWho"){state.adm.who=t.value;render()}
   if(t.id==="admKind"){state.adm.kind=t.value;render()}
+  if(t.id==="tplSel"){state.adm.tpl=t.value;render()}
   if(t.dataset.plan&&t.value){const id=t.dataset.plan,sid=t.value;const ok=await act(m=>taskUpdate(id,{sprintId:sid},`moved this to ${sprintName(sid)}`,m.id));if(ok)toast("Moved to "+sprintName(sid));else render()}
 });
 main.addEventListener("click",async e=>{
+  if(Date.now()<noClickUntil){e.preventDefault();return}
   const b=e.target.closest("button,[data-id]");if(!b)return;const d=b.dataset;
   if(await adminClick(d))return;
+  if(d.mysignin!=null)return who();
+  if(d.tpldel){const pid=d.tpldel;act(async m=>{if(!await ask({title:"Remove this template?",body:"Existing tasks keep their checklists.",ok:"Remove",danger:true}))return;await enqueue("templates/"+pid,"delete");toast("Template removed")},{admin:true});return}
+  if(d.mystatus)return moveTask(d.id2,d.mystatus);
+  if(d.myform){myUi.form=d.id2;myUi.kind=d.myform;render();const f=$(d.myform==="blocked"?"#myReason":($("#myUnits")?"#myUnits":"#myHours"));if(f)f.focus();return}
+  if(d.myclose!=null){myUi.form=null;return render()}
+  if(d.mytap)return myTap(d.id2,+d.mytap);
   if(d.colmove){const id=d.colmove;state.menuFor=null;await moveColumn(id,state.order.indexOf(id)+Number(d.dir));return}
   if(d.tvgo!=null)return tvGo(+d.tvgo);
+  if(d.tvstandup!=null)return startStandup();
+  if(d.tvalerts!=null){ls.set("tb.alerts",alertsOn()?"0":"1");if(alertsOn()){audioUnlock();beep()}return render()}
   if(d.tvpause!=null){state.tvPaused=!state.tvPaused;return render()}
   if(d.tvexit!=null)return exitTv();
   if(d.scope){state.topScope=d.scope;return render()}
@@ -99,12 +110,18 @@ main.addEventListener("click",async e=>{
   if(d.goadmin){state.view="admin";state.adm.tab=d.goadmin;return render()}
   if(d.planweek!=null){act(async m=>{const nw=nextWeek();if(await enqueue("sprints/"+uid("s"),"set",{...nw,goal:"",state:"planned"})){logEvent("sprint",`planned ${nw.name}`,m.id);toast(`${nw.name} planned`)}});return}
   if(d.export!=null)return exportCsv();
+  if(d.xlsx!=null)return exportExcel();
+  if(d.proddays){state.prodDays=+d.proddays;return render()}
   if(d.open)return openTW(d.open);
   if(b.classList.contains("card"))return openTW(d.id);
 });
 main.addEventListener("submit",async e=>{
   e.preventDefault();const f=e.target;
   if(f.id==="setForm")return saveSettings();
+  if(f.id==="tplForm")return saveTemplate(f);
+  if(f.id==="copyForm")return act(async m=>{try{desk.copy=await deskPost("/api/backup-copy",{dir:$("#copyDir").value});logEvent("backup",`set the extra backup folder to ${desk.copy.dir||"none"}`,m.id);render();toast(desk.copy.error?"Saved, but the copy failed: "+desk.copy.error:desk.copy.dir?"Folder saved and first copy made":"Extra copy turned off")}catch(e){toast(e.message)}},{admin:true});
+  if(f.id==="remoteForm")return act(async m=>{const pw=$("#remotePw").value;try{desk.remote=await deskPost("/api/remote",{enabled:true,password:pw});logEvent("security",pw?"set the password for access from outside":"turned on access from outside",m.id);render();toast("Outside access is on")}catch(e){toast(e.message)}},{admin:true});
+  if(f.dataset.myreport||f.dataset.myblock)return mySubmit(f);
   if(f.id==="sprintForm"){
     const name=$("#spName").value.trim(),start=$("#spStart").value,end=$("#spEnd").value,goal=$("#spGoal").value.trim();
     if(!name)return;if(!isoOk(start)||!isoOk(end)||end<start){toast("The end date can't be before the start date.");return}
@@ -138,6 +155,30 @@ main.addEventListener("drop",e=>{
   clearMarks();moveColumn(id,rest.indexOf(target)+(side==="after"?1:0));
 });
 main.addEventListener("dragend",()=>{dragKind=dragId=null;clearMarks()});
+/* touchscreens: press and hold a card for a moment, then drag it to another column */
+let td=null,noClickUntil=0;
+function tdEnd(){if(!td)return;clearTimeout(td.timer);if(td.ghost)td.ghost.remove();if(td.el)td.el.classList.remove("lifting");clearMarks();td=null}
+main.addEventListener("touchstart",e=>{
+  const c=e.target.closest(".card");if(!c||e.touches.length>1||e.target.closest("button"))return;
+  const p=e.touches[0];tdEnd();
+  td={id:c.dataset.id,el:c,x:p.clientX,y:p.clientY,active:false,timer:setTimeout(()=>{
+    if(!td)return;td.active=true;c.classList.add("lifting");try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}
+    const r=c.getBoundingClientRect();const g=c.cloneNode(true);g.className+=" drag-ghost";g.style.width=r.width+"px";g.style.left=(td.x-r.width/2)+"px";g.style.top=(td.y-20)+"px";document.body.appendChild(g);td.ghost=g;td.w=r.width},380)};
+},{passive:true});
+main.addEventListener("touchmove",e=>{
+  if(!td)return;const p=e.touches[0];
+  if(!td.active){if(Math.hypot(p.clientX-td.x,p.clientY-td.y)>10)tdEnd();return}
+  e.preventDefault();
+  td.ghost.style.left=(p.clientX-td.w/2)+"px";td.ghost.style.top=(p.clientY-20)+"px";td.lx=p.clientX;td.ly=p.clientY;
+  td.ghost.style.pointerEvents="none";const under=document.elementFromPoint(p.clientX,p.clientY);const col=under&&under.closest(".col");
+  document.querySelectorAll(".col.over").forEach(x=>{if(x!==col)x.classList.remove("over")});if(col)col.classList.add("over");
+  const sc=$(".board-scroll");if(sc){const r=sc.getBoundingClientRect();if(p.clientX>r.right-40)sc.scrollLeft+=12;else if(p.clientX<r.left+40)sc.scrollLeft-=12}
+},{passive:false});
+main.addEventListener("touchend",()=>{
+  if(!td)return;if(td.active){noClickUntil=Date.now()+500;const under=td.lx!=null?document.elementFromPoint(td.lx,td.ly):null;const col=under&&under.closest(".col");const id=td.id;tdEnd();if(col)moveTask(id,col.dataset.status);return}
+  tdEnd();
+});
+main.addEventListener("touchcancel",tdEnd);
 
 /* ================= start ================= */
 if(location.hash==="#tv"||ls.get("tb.tv")==="1"){state.tv=true;document.body.classList.add("tv")}
@@ -154,6 +195,7 @@ render();
   db.collection("config").onSnapshot(s=>{const r={};s.docs.forEach(x=>{r[x.id]=x.data()});raw.config=r;rebuild("config");state.loaded.config=true;render();maybeDailyBackup()},snapErr);
   db.collection("log").where("day",">=",iso(new Date(Date.now()-400*DAY))).onSnapshot(s=>{state.logs=s.docs.map(x=>({day:x.id,...x.data()}));if(state.view==="admin")render()},snapErr);
   db.collection("backups").onSnapshot(s=>{state.backups=s.docs.map(x=>{const o=x.data();return {id:x.id,kind:str(o.kind,20)||"manual",note:str(o.note,200),by:typeof o.by==="string"?o.by:null,at:num(o.at),day:str(o.day,10),parts:Math.max(1,num(o.parts,1)),size:num(o.size),counts:{tasks:0,members:0,sprints:0,...(o.counts||{})}}});state.loaded.backups=true;if(state.view==="admin")render();maybeDailyBackup()},snapErr);
+  db.collection("templates").onSnapshot(s=>{state.templates=s.docs.map(x=>({id:x.id,...x.data()}));render()},()=>{});
   db.doc("erp/main").onSnapshot(s=>{state.erp=s.exists?s.data():null;if(state.view!=="erp")render();else if($("#twDlg").open)renderTW()},()=>{});
   if(Q.ops.length){toast(`Saving ${Q.ops.length} change${Q.ops.length>1?"s":""} left over from last time`);pump()}
 })();

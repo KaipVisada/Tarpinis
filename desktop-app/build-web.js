@@ -14,6 +14,7 @@ board = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.svg"><style>[hidden]{display:none!important}</style>
 <script src="desktop-shim.js"></script>
+<script src="vendor/xlsx.full.min.js" defer></script>
 </head><body>
 ${board}
 </body></html>`;
@@ -37,4 +38,5 @@ fs.writeFileSync(path.join(out, "erp.html"), erp);
 
 for (const f of fs.readdirSync(path.join(root, "web-src"))) fs.copyFileSync(path.join(root, "web-src", f), path.join(out, f));
 fs.copyFileSync(require.resolve("chart.js/dist/chart.min.js"), path.join(out, "vendor", "chart.min.js"));
+fs.copyFileSync(require.resolve("xlsx/dist/xlsx.full.min.js"), path.join(out, "vendor", "xlsx.full.min.js"));
 console.log(`web/ built. ERP storage calls redirected: ${n}.`);

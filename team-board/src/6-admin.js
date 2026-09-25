@@ -71,9 +71,9 @@ async function purgeTrash(m,silent){
 /* ================= admin view ================= */
 function viewAdmin(){
   const m=me();if(!m||m.access!=="admin"){state.view="overview";return viewOverview()}
-  const tabs=[["members","Members"],["activity","Activity log"],["backups","Backups"],["trash","Trash"],["settings","Settings"]];
+  const tabs=[["members","Members"],["activity","Activity log"],["backups","Backups"],["trash","Trash"],["templates","Templates"],["settings","Settings"]];
   const trashN=["tasks","members","sprints"].reduce((a,c)=>a+state[c].filter(x=>x.deleted).length,0);
-  const body={members:admMembers,activity:admActivity,backups:admBackups,trash:admTrash,settings:admSettings}[state.adm.tab]();
+  const body={members:admMembers,activity:admActivity,backups:admBackups,trash:admTrash,templates:admTemplates,settings:admSettings}[state.adm.tab]();
   return `<div class="adm-nav"><div class="seg" role="group" aria-label="Admin sections">${tabs.map(([k,l])=>`<button data-adm="${k}" aria-pressed="${state.adm.tab===k}">${l}${k==="trash"&&trashN?` (${trashN})`:""}</button>`).join("")}</div>
     <span class="goal">Signed in as ${esc(m.name)} (admin)</span></div>${body}`;
 }
@@ -127,7 +127,7 @@ function admBackups(){
       <td><small>${b.counts.tasks} tasks, ${b.counts.members} people, ${b.counts.sprints} sprints</small></td><td class="num">${fmtBytes(b.size)}</td>
       <td class="num" style="white-space:nowrap"><button class="btn small" data-brestore="${esc(b.id)}">Restore</button>${downloads?` <button class="btn small ghost" data-bdl="${esc(b.id)}">Download</button>`:""} <button class="xbtn" data-bdel="${esc(b.id)}" aria-label="Delete backup">×</button></td></tr>`).join("")}</tbody></table></div>`
       :'<div class="empty">No backups yet. Use Back up now to make the first one.</div>'}
-    <p class="goal" style="margin:12px 0 0">Storage: about ${docs} of 5,000 records used.</p></div>`;
+    ${window.__desktop?`<p class="goal" style="margin:12px 0 0">The program also saves a full copy of all data to the backups folder on this PC every day (Menu, Team Board, Open the backups folder).</p>`:`<p class="goal" style="margin:12px 0 0">Storage: about ${docs} of 5,000 records used.</p>`}</div>${deskCopyPanel()}`;
 }
 function admTrash(){
   const items=[];
@@ -151,11 +151,13 @@ function admSettings(){
     <label>Lock after inactivity<select id="setLock">${[1,2,3,5,10,15,30,60].map(n=>`<option value="${n}"${S.lockMinutes===n?" selected":""}>${n} minute${n>1?"s":""}</option>`).join("")}</select></label>
     <label>Keep deleted items<select id="setTrash">${[7,14,30,60,90].map(n=>`<option value="${n}"${S.trashDays===n?" selected":""}>${n} days</option>`).join("")}</select></label>
     <label class="check" style="align-self:end"><input type="checkbox" id="setDaily"${S.dailyBackup?" checked":""}> Automatic daily backup</label>
+    <label class="check full"><input type="checkbox" id="setQc"${S.qcOnDone?" checked":""}> Ask for a quality check when a product task is marked as done</label>
+    ${window.__desktop?`<label class="check full"><input type="checkbox" id="setStock"${S.consumeStock?" checked":""}> Take materials out of ERP stock and add finished products as units are reported</label>`:""}
     <div class="full actions" style="margin-top:4px"><button class="btn primary">Save settings</button></div></form>
     <p class="adm-note" style="margin-top:12px">A short lock time suits a shared TV or tablet. Task numbers look like #${esc(S.keyPrefix)}-12.</p></div>
     <div class="panel"><h2>Danger zone</h2><div class="danger-zone"><h3>Delete all board data</h3>
       <p style="margin:0;color:var(--muted);font-size:14px">Removes every task, sprint, member, PIN and log entry. Backups are kept, and a safety backup is made first, so you can restore from the Backups tab after setting up a new admin.</p>
-      <div><button class="btn danger" data-wipe>Delete all data</button></div></div></div></div>`;
+      <div><button class="btn danger" data-wipe>Delete all data</button></div></div></div></div>${deskRemotePanel()}`;
 }
 
 /* ---- member editor ---- */
@@ -222,6 +224,9 @@ $("#memForm").addEventListener("submit",async e=>{
 async function adminClick(d){
   if(d.adm){state.adm.tab=d.adm;state.adm.q="";state.adm.show=150;render();
     if(d.adm==="trash"||d.adm==="activity")act(m=>purgeTrash(m),{admin:true});return true}
+  if(d.copynow!=null){act(async()=>{try{desk.copy=await deskPost("/api/backup-copy",{run:true});render();toast(desk.copy.error?"The copy failed: "+desk.copy.error:"Copied")}catch(e){toast(e.message)}},{admin:true});return true}
+  if(d.remoteoff!=null){act(async m=>{if(!await ask({title:"Turn off access from outside?",body:"People outside the office network will be blocked. The office network isn't affected.",ok:"Turn off"}))return;
+    try{desk.remote=await deskPost("/api/remote",{enabled:false});logEvent("security","turned off access from outside the office",m.id);render();toast("Outside access is off")}catch(e){toast(e.message)}},{admin:true});return true}
   if(d.madd!=null){act(()=>openMember(null),{admin:true});return true}
   if(d.medit){act(()=>openMember(d.medit),{admin:true});return true}
   if(d.mpin){const x=member(d.mpin);if(x)act(async m=>{if(!await ask({title:`Reset ${x.name}'s PIN?`,body:"They create a new PIN the next time they change something.",ok:"Reset PIN"}))return;
@@ -266,7 +271,33 @@ $("#importFile").addEventListener("change",async e=>{
 function saveSettings(){
   return act(async m=>{
     const p=$("#setPrefix").value.trim().toUpperCase();if(!/^[A-Z0-9]{1,6}$/.test(p)){toast("The prefix can be 1 to 6 letters or digits.");return}
-    const data={teamName:$("#setName").value.trim()||"Team board",keyPrefix:p,lockMinutes:+$("#setLock").value,trashDays:+$("#setTrash").value,dailyBackup:$("#setDaily").checked};
+    const data={teamName:$("#setName").value.trim()||"Team board",keyPrefix:p,lockMinutes:+$("#setLock").value,trashDays:+$("#setTrash").value,dailyBackup:$("#setDaily").checked,qcOnDone:$("#setQc").checked,consumeStock:$("#setStock")?$("#setStock").checked:state.settings.consumeStock};
     if(await enqueue("config/settings","set",data)){logEvent("settings","changed the settings",m.id);toast("Settings saved")}
   },{admin:true});
+}
+
+/* ================= desktop program: extra backup copy and remote access ================= */
+const desk={copy:null,remote:null,loading:false};
+async function deskLoad(){
+  if(!window.__desktop||desk.loading)return;desk.loading=true;
+  try{const [c,r]=await Promise.all([fetch("/api/backup-copy").then(x=>x.json()),fetch("/api/remote").then(x=>x.json())]);desk.copy=c;desk.remote=r}catch(e){}
+  desk.loading=false;render();
+}
+async function deskPost(url,body){const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||"That didn't work.");return j}
+function deskCopyPanel(){
+  if(!window.__desktop)return "";const c=desk.copy;
+  if(!c){deskLoad();return `<div class="panel"><h2>Extra copy on a USB stick or cloud drive</h2><div class="empty">Loading…</div></div>`}
+  return `<div class="panel"><h2>Extra copy on a USB stick or cloud drive</h2>
+    <p class="adm-note">If this PC's disk fails, the backups above are lost with it. Once a day, the program can also copy everything to another folder: a USB stick, OneDrive, Google Drive or a network drive. The last 30 days are kept there.</p>
+    <form id="copyForm" class="row-form"><input id="copyDir" style="flex:1 1 320px" value="${esc(c.dir)}" placeholder="e.g. E:\\ or C:\\Users\\Kai\\OneDrive"><button class="btn primary">Save folder</button>${c.dir?`<button type="button" class="btn" data-copynow>Copy now</button>`:""}</form>
+    <p style="margin:10px 0 0;font-size:14px">${c.error?`<span class="chip bad">Last copy failed</span> ${esc(c.error)}`:c.lastCopy?`<span class="chip ok">Copied</span> ${fmtStamp(c.lastCopy)} to ${esc(c.dir)}\\Team Board backups`:c.dir?"Not copied yet.":'<span class="muted">No folder chosen, so no extra copy is made.</span>'}</p></div>`;
+}
+function deskRemotePanel(){
+  if(!window.__desktop)return "";const r=desk.remote;
+  if(!r){deskLoad();return ""}
+  return `<div class="panel"><h2>Access from outside the office</h2>
+    <p class="adm-note">Phones and laptops on the office network always get in. From anywhere else (for example over Tailscale from home), the board asks for this password first. PINs alone are too weak for that.</p>
+    <p style="margin:0 0 10px"><span class="chip ${r.enabled?"ok":""}">${r.enabled?"On":"Off"}</span> ${r.enabled?`Password set ${r.setAt?fmtDay(r.setAt):""}.`:"Outside access is blocked."}</p>
+    <form id="remoteForm" class="row-form"><input id="remotePw" type="password" autocomplete="new-password" minlength="8" placeholder="${r.enabled?"New password (optional)":"Password, at least 8 characters"}" style="flex:1 1 240px">
+      <button class="btn primary">${r.enabled?"Change password":"Turn on"}</button>${r.enabled?`<button type="button" class="btn danger" data-remoteoff>Turn off</button>`:""}</form></div>`;
 }

@@ -21,7 +21,8 @@ function statusPatch(t,status){
 }
 function moveTask(id,status){
   return act(m=>{const t=task(id);if(!t||t.status===status)return;
-    return taskUpdate(id,statusPatch(t,status),`moved this from ${COLS[t.status]} to ${COLS[status]}`,m.id)});
+    return taskUpdate(id,statusPatch(t,status),`moved this from ${COLS[t.status]} to ${COLS[status]}`,m.id).then(ok=>{
+      if(ok&&status==="done"&&qcWanted(t))setTimeout(()=>openQc(id),150);return ok})});
 }
 const FIELD_LABEL={title:"the title",type:"the type",priority:"the priority",points:"the story points",estimateH:"the estimate",erpRef:"the ERP reference",labels:"the labels",blockedReason:"the blocked reason",description:"the description"};
 function fieldText(f,v,t){
@@ -88,6 +89,8 @@ $("#newForm").addEventListener("submit",async e=>{
       qty:Math.max(0,+$("#nfQty").value||0),unit:$("#nfUnit").value.trim()||"units",
       productId:erpProduct($("#nfProduct").value)?Number($("#nfProduct").value):null,productName:erpProduct($("#nfProduct").value)?.name||"",
       description:"",labels:[],checklist:{},files:{},comments:{},worklogs:{},timers:{},activity:{[uid("a")]:{at:now,by:m.id,text:"created this task"}}};
+    const tp=data.productId!=null?templatePatch(data.productId,data.qty):null;
+    if(tp){data.checklist=tp.checklist;if(tp.estimateH!=null)data.estimateH=tp.estimateH;if(tp.unit&&data.unit==="units")data.unit=tp.unit}
     $("#newDlg").close();
     return enqueue("tasks/"+id,"set",data);
   });
@@ -234,6 +237,8 @@ twEl.addEventListener("click",async e=>{
   if(d.side){tw.side=d.side;return renderTW()}
   if(d.twdelete!=null)return trashTask(t.id);
   if(d.unassign)return removeAssignee(t.id,d.unassign);
+  if(d.qcopen!=null)return act(()=>openQc(t.id));
+  if(d.tplapply!=null)return applyTemplate(t.id);
   if(d.cltoggle){const c=t.checklist.find(x=>x.id===d.cltoggle);if(c)act(m=>taskUpdate(t.id,{checklist:{[c.id]:{done:!c.done,doneBy:!c.done?m.id:null}}},`${c.done?"unchecked":"checked"} "${c.text}"`,m.id));return}
   if(d.cldel){const c=t.checklist.find(x=>x.id===d.cldel);if(c)act(m=>taskUpdate(t.id,{checklist:{[c.id]:null}},`removed checklist item "${c.text}"`,m.id));return}
   if(d.fopen){const f=t.files.find(x=>x.id===d.fopen);if(f)openFile(f);return}

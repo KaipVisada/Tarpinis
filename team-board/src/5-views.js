@@ -381,7 +381,7 @@ const PEOPLE_PER_PAGE=12;
 function tvSlides(){
   const pages=Math.max(1,Math.ceil((members().length+(sprintTasks().some(t=>!t.assignees.length&&t.status!=="done")?1:0))/PEOPLE_PER_PAGE));
   const people=Array.from({length:pages},(_,i)=>["people:"+i,"Who's working on what"+(pages>1?` (${i+1} of ${pages})`:"")]);
-  return [["overview","Sprint overview"],...people,["board","Sprint board"],["top","Top 3"],["remarks","Latest issues and remarks"]];
+  return [["overview","Sprint overview"],...people,["board","Sprint board"],["production","Production"],["top","Top 3"],["remarks","Latest issues and remarks"]];
 }
 const TV_SECONDS=20;let tvElapsed=0;
 function enterTv(){state.tv=true;state.followActive=true;pickSprint();ls.set("tb.tv","1");state.tvSlide=0;tvElapsed=0;document.body.classList.add("tv");
@@ -417,17 +417,18 @@ function tvRemarks(){const rc=sprintRemarks(8);return rc.length?`<div class="pan
 function renderTv(){
   const slides=tvSlides();if(state.tvSlide>=slides.length)state.tvSlide=0;
   const s=sprint(state.sprintId);const [key,title]=slides[state.tvSlide];const [kind,arg]=key.split(":");
-  const body={overview:()=>viewOverview(),people:()=>tvPeople(+arg||0),board:tvBoard,top:tvTop,remarks:tvRemarks}[kind]();
+  const body={overview:()=>viewOverview(),people:()=>tvPeople(+arg||0),board:tvBoard,production:tvProduction,top:tvTop,remarks:tvRemarks}[kind]();
   $("#main").innerHTML=`<div class="tvbar"><div><h1 class="tvtitle">${esc(state.settings.teamName)}</h1>
     <div class="sub">${s?`${esc(s.name)}, ${daysLeft(s)} day${daysLeft(s)===1?"":"s"} left${s.goal?`. Goal: ${esc(s.goal)}`:""}`:""}</div></div>
     <div class="tvdots">${slides.map((x,i)=>`<button data-tvgo="${i}" aria-label="Show ${esc(x[1])}" aria-current="${i===state.tvSlide}"><i style="width:${Math.min(100,tvElapsed/TV_SECONDS*100)}%"></i></button>`).join("")}</div>
     <div class="clock" id="tvClock">${clock()}</div>
+    <button class="btn" data-tvstandup>Stand-up</button><button class="btn" data-tvalerts>${alertsOn()?"Alerts on":"Alerts off"}</button>
     <button class="btn" data-tvpause>${state.tvPaused?"Resume":"Pause"}</button><button class="btn" data-tvexit>Exit TV mode</button></div>
     <h2 class="tvslide-title">${esc(title)}</h2>${body}`;
 }
 setInterval(()=>{
   if(!state.tv)return;const c=$("#tvClock");if(c)c.textContent=clock();
-  if(state.tvPaused||document.querySelector("dialog[open]"))return;tvElapsed++;
+  if(state.tvPaused||su.on||document.querySelector("dialog[open]"))return;tvElapsed++;
   const bar=document.querySelector('.tvdots [aria-current="true"] i');if(bar)bar.style.width=Math.min(100,tvElapsed/TV_SECONDS*100)+"%";
   if(tvElapsed>=TV_SECONDS)tvGo(state.tvSlide+1);
 },1000);

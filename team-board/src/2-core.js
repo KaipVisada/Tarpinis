@@ -7,7 +7,7 @@ const AVAIL={available:["Available","ok"],busy:["Busy","warn"],away:["Away","bad
 const KIND={comment:{label:"Comment",cls:"k-comment"},issue:{label:"Issue",cls:"k-issue"},lesson:{label:"What went wrong",cls:"k-lesson"}};
 const PRIO={1:"High",2:"Medium",3:"Low"};
 const TYPES={story:"Story",task:"Task",bug:"Bug"};
-const DEFAULT_SETTINGS={teamName:"Team board",keyPrefix:"DF",lockMinutes:3,dailyBackup:true,trashDays:30,keepDaily:14,keepOther:20};
+const DEFAULT_SETTINGS={teamName:"Team board",keyPrefix:"DF",lockMinutes:3,dailyBackup:true,trashDays:30,keepDaily:14,keepOther:20,consumeStock:true,qcOnDone:true};
 const DAY=86400000;
 const MEDAL=["#f5c451","#c9d1dc","#d08a4f"];
 const hr=v=>Math.round((+v||0)*100)/100;
@@ -35,9 +35,9 @@ const vals=o=>o&&typeof o==="object"?Object.entries(o).filter(([k,v])=>v&&typeof
 
 /* ================= state ================= */
 const state={tasks:[],members:[],sprints:[],logs:[],backups:[],settings:{...DEFAULT_SETTINGS},order:DEFAULT_ORDER.slice(),
-  view:ls.get("tb.view")||"overview",chartMode:"burndown",type:"",menuFor:null,sprintId:null,q:"",who:"",
+  view:ls.get("tb.view")||(window.innerWidth<700?"my":"overview"),chartMode:"burndown",type:"",menuFor:null,sprintId:null,q:"",who:"",
   topScope:"sprint",followActive:true,tv:false,tvSlide:0,tvPaused:false,
-  adm:{tab:"members",q:"",who:"",kind:"",show:150},loaded:{},isOwner:false};
+  adm:{tab:"members",q:"",who:"",kind:"",show:150},templates:[],prodDays:30,loaded:{},isOwner:false};
 const raw={members:{},sprints:{},tasks:{},config:{}};   // untouched documents, for backups
 let db=null,downloads=null,assets=null,userCap=null;
 const clientId=ss.get("tb.client")||uid("c");ss.set("tb.client",clientId);
@@ -151,6 +151,7 @@ const CLEAN={
     activity:vals(o.activity).map(a=>({...a,text:str(a.text,400),at:num(a.at),by:str(a.by,80)})).sort((a,b)=>a.at-b.at),
     worklogs:wl.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.at-b.at),loggedH:hr(wl.reduce((s,w)=>s+w.hours,0)),timers,
     qty:Math.max(0,Math.round(num(o.qty)*100)/100),unit:str(o.unit,20)||"units",doneUnits:Math.round(wl.reduce((s,w)=>s+w.units,0)*100)/100,
+    qc:o.qc&&typeof o.qc==="object"&&!Array.isArray(o.qc)?{score:num(o.qc.score),status:["Pass","Rework","Fail"].includes(o.qc.status)?o.qc.status:"Pass",note:str(o.qc.note,300),date:isoOk(o.qc.date)?o.qc.date:"",by:str(o.qc.by,80),items:Array.isArray(o.qc.items)?o.qc.items.slice(0,40):[]}:null,
     productId:o.productId!=null&&o.productId!==""&&isFinite(Number(o.productId))?Number(o.productId):null,productName:str(o.productName,120),
     deleted:!!o.deleted,deletedAt:num(o.deletedAt)||null,deletedBy:str(o.deletedBy,80)}},
   members:(id,o)=>({id,name:str(o.name,80)||"Unnamed",title:str(o.title,60),access:ACCESS[o.access]?o.access:"worker",
@@ -178,12 +179,15 @@ function rebuild(col){
     if(typeof s.keyPrefix==="string"&&/^[A-Za-z0-9]{1,6}$/.test(s.keyPrefix))S.keyPrefix=s.keyPrefix.toUpperCase();
     if([1,2,3,5,10,15,30,60].includes(s.lockMinutes))S.lockMinutes=s.lockMinutes;
     if(typeof s.dailyBackup==="boolean")S.dailyBackup=s.dailyBackup;
+    if(typeof s.consumeStock==="boolean")S.consumeStock=s.consumeStock;
+    if(typeof s.qcOnDone==="boolean")S.qcOnDone=s.qcOnDone;
     if([7,14,30,60,90].includes(s.trashDays))S.trashDays=s.trashDays;
     state.settings=S;return;
   }
   state[col]=Object.entries(raw[col]).map(([id,o])=>{try{return CLEAN[col](id,o||{})}catch(e){console.error(e);return null}}).filter(Boolean);
   if(col==="tasks")state.tasks.forEach(t=>{t.assignee=t.assignees[0]||null});
   if(col==="sprints")pickSprint();
+  if(col==="tasks"&&typeof watchBlocked==="function")watchBlocked();
 }
 function normOrder(o){const ok=Array.isArray(o)?o.filter((k,i)=>COLS[k]&&o.indexOf(k)===i):[];DEFAULT_ORDER.forEach(k=>{if(!ok.includes(k))ok.push(k)});return ok}
 function subscribe(col){

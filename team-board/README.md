@@ -1,5 +1,9 @@
 # Team board
 
+> **The desktop program in `../desktop-app` is the main, maintained version.** It runs this same board
+> together with the DroneForge Pro ERP. The claude.ai artifact build of this folder is kept only as a
+> web preview; features that need the ERP (products, stock, materials) don't work there.
+
 A Scrum/Kanban board for managing the team's work, published as a claude.ai artifact.
 Shared data lives in the artifact's database, so everyone with the link sees the same board live.
 
@@ -17,7 +21,12 @@ Shared data lives in the artifact's database, so everyone with the link sees the
 | `src/2-core.js` | Helpers, state, the save queue (retries, survives reloads), data cleaning |
 | `src/3-auth.js` | Accounts and 4-digit PINs, auto-lock |
 | `src/4-task.js` | Task window: description, checklist, files, feed, worklog and timer |
+| `src/4b-work.js` | Work orders: ERP product, quantity, progress bar, materials needed |
+| `src/4c-production.js` | Production tab: output, finished goods, material shortages and forecast, people and product stats, Excel export |
+| `src/4d-my.js` | My work: the phone page for workers (+1, report, blocked) |
+| `src/4e-templates.js` | Product templates (steps, standard hours, quality items) and the quality check dialog |
 | `src/5-views.js` | Overview, Board, Backlog, Team, Top 3, Insights, TV mode |
+| `src/5b-standup.js` | Stand-up mode, TV production slide, alert when a task becomes blocked |
 | `src/6-admin.js` | Admin: members, activity log, backups, trash, settings |
 | `src/7-main.js` | Rendering, events, crash protection, startup |
 

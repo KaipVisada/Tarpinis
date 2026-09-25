@@ -43,7 +43,10 @@ function workSection(t){
     :`<p class="muted" style="font-size:13px;margin:6px 0 0">This product has no bill of materials in the ERP yet, so materials can't be calculated.</p>`;
   return `<section class="tw-sec work"><h3>Work order ${t.productId!=null&&hasErp?'<small class="chip info">linked to ERP</small>':""}</h3>${edit}
     ${progHtml(t,"lg")}
-    ${t.qty?`<div><button type="button" class="btn small primary" data-side="worklog">Report today's work</button></div>`:""}
+    <div class="actions" style="margin:0">${t.qty?`<button type="button" class="btn small primary" data-side="worklog">Report today's work</button>`:""}
+      ${t.qc?`<span class="chip ${t.qc.status==="Pass"?"ok":t.qc.status==="Rework"?"warn":"bad"}">Quality: ${t.qc.status} ${t.qc.score}%</span>${admin?`<button type="button" class="btn small ghost" data-qcopen>Redo check</button>`:""}`
+        :t.status==="done"&&t.productId!=null?`<button type="button" class="btn small" data-qcopen>Record quality check</button>`:""}
+      ${admin&&t.productId!=null&&tplFor(t.productId)?`<button type="button" class="btn small ghost" data-tplapply>Apply ${esc(t.productName)} template</button>`:""}</div>
     ${mats}</section>`;
 }
 function setWork(id,patch,text){

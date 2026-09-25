@@ -9,6 +9,7 @@ const os = require("os");
 const crypto = require("crypto");
 const { Store, validPath } = require("./store");
 const { Erp } = require("./erp");
+const { isPrivate, Remote, Copy, loginPage, offPage } = require("./guard");
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".woff2": "font/woff2" };
 
@@ -34,6 +35,10 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
   const erp = new Erp(store, log);
   const blobDir = path.join(dataDir, "files"); fs.mkdirSync(blobDir, { recursive: true });
   const epoch = crypto.randomBytes(6).toString("hex");
+  const remote = new Remote(dataDir);
+  const copy = new Copy(dataDir, store, log);
+  setTimeout(() => copy.run(false), 60000).unref();
+  setInterval(() => copy.run(false), 30 * 60000).unref();
   const clients = new Set();
 
   store.listeners.add(ev => {
@@ -55,6 +60,14 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
 
   async function api(req, res, url) {
     const p = url.pathname;
+    const inside = isPrivate(req.socket.remoteAddress);
+    if (p === "/api/remote" || p === "/api/backup-copy") {
+      if (!inside) return send(res, 403, { code: "invalid_argument", message: "Only from the office network" });
+      if (req.method === "GET") return send(res, 200, p === "/api/remote" ? remote.status() : copy.status());
+      const b = await json(req);
+      try { return send(res, 200, p === "/api/remote" ? remote.set(!!b.enabled, b.password) : (b.run ? copy.run(true) : copy.setDir(b.dir))); }
+      catch (e) { return send(res, 400, { code: e.code || "invalid_argument", message: e.message || "" }); }
+    }
     if (p === "/api/store" && req.method === "GET") return send(res, 200, { epoch, ...store.snapshot() });
     if (p === "/api/write" && req.method === "POST") {
       const { path: dp, mode, data } = await json(req);
@@ -108,6 +121,19 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, "http://localhost");
+      const ip = req.socket.remoteAddress;
+      if (!isPrivate(ip)) {                                   // outside the office network
+        const html = (code, h) => { res.writeHead(code, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" }); res.end(h); };
+        if (!remote.enabled) return html(403, offPage());
+        if (url.pathname === "/api/remote-login" && req.method === "POST") {
+          if (remote.limited(ip)) return html(429, loginPage("Too many wrong tries. Wait 5 minutes."));
+          const pw = new URLSearchParams((await body(req, 4096)).toString("utf8")).get("password");
+          if (!remote.check(pw)) { remote.failed(ip); log.warn("Wrong remote password from " + ip); return html(401, loginPage("Wrong password.")); }
+          log.info("Remote sign-in from " + ip);
+          res.writeHead(303, { Location: "/", "Set-Cookie": `tb_auth=${remote.token()}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000` }); return res.end();
+        }
+        if (!remote.valid(req.headers.cookie)) return url.pathname.startsWith("/api/") ? send(res, 401, { code: "unavailable", message: "Sign in again" }) : html(401, loginPage());
+      }
       if (url.pathname.startsWith("/api/")) return await api(req, res, url);
       if (url.pathname.startsWith("/_blob/")) {
         const id = url.pathname.slice(7);
