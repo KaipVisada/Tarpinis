@@ -7,10 +7,15 @@ function render(){
     sel.innerHTML=ss.length?ss.map(s=>`<option value="${esc(s.id)}"${s.id===state.sprintId?" selected":""}>${esc(s.name)}${s.state==="active"?" (active)":s.state==="closed"?" (closed)":""}</option>`).join(""):'<option>None yet</option>';
     const s=sprint(state.sprintId);$("#sprintDates").textContent=s?`${fmtDate(s.start)} – ${fmtDate(s.end)}`:"";
     renderWho();renderMyTimer();saveStatus();
-    if(state.view==="admin"&&!(me()&&me().access==="admin"))state.view="overview";
+    if((state.view==="admin"||state.view==="erp")&&!(me()&&me().access==="admin"))state.view="overview";
+    if(state.view==="erp"&&!window.__desktop)state.view="overview";
+    const host=$("#erpHost");const showErp=state.view==="erp"&&!state.tv;
+    if(showErp&&!host.firstChild)host.innerHTML='<iframe class="erp-frame" src="erp.html" title="ERP"></iframe>';
+    host.hidden=!showErp;$("#main").hidden=showErp;
     document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===state.view));
     if($("#twDlg").open)renderTW();
     if(state.tv){renderTv();return}
+    if(showErp)return;
     const focusId=document.activeElement&&document.activeElement.id;let pos=null;try{pos=focusId&&$("#main").contains(document.activeElement)?document.activeElement.selectionStart:null}catch(e){}
     const same=render.lastView===state.view;render.lastView=state.view;
     const keep=same?snapView():null;
@@ -48,7 +53,7 @@ window.addEventListener("unhandledrejection",e=>{console.error(e.reason);const c
 document.addEventListener("click",e=>{if(e.target.id==="crashReload"){setNotice("");crashShown=false;state.view="overview";render()}});
 
 /* ================= events ================= */
-$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){state.view=b.dataset.v;ls.set("tb.view",state.view==="admin"?"":state.view);render()}});
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){state.view=b.dataset.v;ls.set("tb.view",state.view==="admin"||state.view==="erp"?"":state.view);render()}});
 function chooseSprint(id){state.sprintId=id;state.followActive=sprint(id)?.state==="active";render()}
 $("#sprintSel").addEventListener("change",e=>chooseSprint(e.target.value));
 $("#tvBtn").addEventListener("click",enterTv);
@@ -149,5 +154,6 @@ render();
   db.collection("config").onSnapshot(s=>{const r={};s.docs.forEach(x=>{r[x.id]=x.data()});raw.config=r;rebuild("config");state.loaded.config=true;render();maybeDailyBackup()},snapErr);
   db.collection("log").where("day",">=",iso(new Date(Date.now()-400*DAY))).onSnapshot(s=>{state.logs=s.docs.map(x=>({day:x.id,...x.data()}));if(state.view==="admin")render()},snapErr);
   db.collection("backups").onSnapshot(s=>{state.backups=s.docs.map(x=>{const o=x.data();return {id:x.id,kind:str(o.kind,20)||"manual",note:str(o.note,200),by:typeof o.by==="string"?o.by:null,at:num(o.at),day:str(o.day,10),parts:Math.max(1,num(o.parts,1)),size:num(o.size),counts:{tasks:0,members:0,sprints:0,...(o.counts||{})}}});state.loaded.backups=true;if(state.view==="admin")render();maybeDailyBackup()},snapErr);
+  db.doc("erp/main").onSnapshot(s=>{state.erp=s.exists?s.data():null;if(state.view!=="erp")render();else if($("#twDlg").open)renderTW()},()=>{});
   if(Q.ops.length){toast(`Saving ${Q.ops.length} change${Q.ops.length>1?"s":""} left over from last time`);pump()}
 })();

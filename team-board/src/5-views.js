@@ -48,15 +48,16 @@ function filterBar(extra=""){
     ${lm&&member(lm)?`<button class="btn small" data-mine>${state.who===lm?"Show everyone":"Only my tasks"}</button>`:""}${extra}`;
 }
 function card(t){
-  const bd=blockedDays(t);const cs=t.comments.length,oi=openIssues(t);const done=t.status==="done";
+  const adm=isAdmin();const bd=blockedDays(t);const cs=t.comments.length,oi=openIssues(t);const done=t.status==="done";
   const cl=t.checklist,cd=cl.filter(c=>c.done).length;const running=Object.keys(t.timers).length;
   return `<div class="card t-${t.type}${t.status==="blocked"?" blocked":""}${done?" is-done":""}" draggable="true" data-id="${esc(t.id)}" role="button" tabindex="0" aria-label="${esc(shortId(t)+" "+t.title)}">
     <span class="c-type" title="${TYPES[t.type]}">${TYPE_ICON[t.type]}</span>
     <div class="c-title"><span class="c-id">${esc(shortId(t))}</span>${esc(t.title)}</div>
     ${avStack(t)}
     ${t.status==="blocked"&&t.blockedReason?`<div class="reason">${esc(t.blockedReason)}</div>`:""}
-    ${t.labels.length||t.erpRef?`<div class="labels">${t.labels.map(lblHtml).join("")}${t.erpRef?`<span class="chip erp">${esc(t.erpRef)}</span>`:""}</div>`:""}
-    <div class="c-foot"><span class="pts-b" title="Story points">${t.points}</span>
+    ${adm&&(t.labels.length||t.erpRef)?`<div class="labels">${t.labels.map(lblHtml).join("")}${t.erpRef?`<span class="chip erp">${esc(t.erpRef)}</span>`:""}</div>`:""}
+    ${t.qty?`<div class="labels"><span class="chip info">${workLine(t)}</span></div>${progHtml(t)}`:""}
+    <div class="c-foot">${adm?`<span class="pts-b" title="Story points">${t.points}</span>`:""}
       ${cl.length?`<span class="ci${cd===cl.length?" ok":""}" title="Checklist">${I_LIST}${cd}/${cl.length}</span>`:""}
       ${cs?`<span class="ci" title="${cs} comment${cs>1?"s":""}">${I_CMT}${cs}</span>`:""}
       ${oi?`<span class="ci warn" title="${oi} open issue${oi>1?"s":""}">${I_WARN}${oi}</span>`:""}
@@ -396,7 +397,7 @@ function tvPeople(page){
     return `<div class="person${blocked?" warn":""}"><div class="ph"><span class="avatar">${esc(initials(m.name))}</span>
       <div><div class="nm">${esc(m.name)}</div><div class="sub">${off?"Off today":esc(m.title)}</div></div><div class="pdone">${done} done</div></div>
       ${open.slice(0,5).map(t=>{const oi=openIssues(t);const run=Object.keys(t.timers).length;
-        return `<div class="ptask"><span class="st st-${t.status}">${COLS[t.status]}${t.status==="blocked"?" "+(blockedDays(t)||0)+"d":""}</span><span class="pt">${esc(t.title)}${t.assignees.length>1?`<span class="sub"> with ${esc(t.assignees.filter(x=>x!==m.id).map(x=>firstName(mName(x))).join(", "))}</span>`:""}</span>${run?'<span class="ic" style="color:var(--cyan)">⏱</span>':""}${oi?`<span class="ic">${oi} issue${oi>1?"s":""}</span>`:""}</div>`}).join("")||'<div class="ptask sub">No open tasks in this sprint</div>'}
+        return `<div class="ptask"><span class="st st-${t.status}">${COLS[t.status]}${t.status==="blocked"?" "+(blockedDays(t)||0)+"d":""}</span><span class="pt">${esc(t.title)}${t.qty?` <span class="sub">${fmtN(t.doneUnits)}/${fmtN(t.qty)}</span>`:""}${t.assignees.length>1?`<span class="sub"> with ${esc(t.assignees.filter(x=>x!==m.id).map(x=>firstName(mName(x))).join(", "))}</span>`:""}</span>${run?'<span class="ic" style="color:var(--cyan)">⏱</span>':""}${oi?`<span class="ic">${oi} issue${oi>1?"s":""}</span>`:""}</div>`}).join("")||'<div class="ptask sub">No open tasks in this sprint</div>'}
       ${open.length>5?`<div class="more">+${open.length-5} more</div>`:""}</div>`});
   const un=st.filter(t=>!t.assignees.length&&t.status!=="done");
   if(un.length)cards.push(`<div class="person"><div class="ph"><span class="avatar none">?</span><div><div class="nm">Unassigned</div><div class="sub">Needs an owner</div></div></div>
@@ -408,7 +409,7 @@ function tvBoard(){
   return `<div class="tvboard" style="grid-template-columns:repeat(${state.order.length},minmax(0,1fr))">${state.order.map(k=>{
     const items=st.filter(t=>t.status===k).sort((a,b)=>a.priority-b.priority);
     return `<div class="tvcol" data-status="${k}"><h3><span>${COLS[k]}</span><span>${items.length}</span></h3>
-      ${items.slice(0,8).map(t=>`<div class="tvitem"><span>${esc(t.title)}</span><span style="margin-left:auto">${avStack(t,3)}</span></div>`).join("")}
+      ${items.slice(0,8).map(t=>`<div class="tvitem"><span>${esc(t.title)}${t.qty?`<span class="tvprog"><span class="prog-track"><i style="width:${Math.min(100,Math.round(t.doneUnits/t.qty*100))}%"></i></span>${Math.min(100,Math.round(t.doneUnits/t.qty*100))}%</span>`:""}</span><span style="margin-left:auto">${avStack(t,3)}</span></div>`).join("")}
       ${items.length>8?`<div class="more">+${items.length-8} more</div>`:""}</div>`}).join("")}</div>`;
 }
 function tvTop(){const top=scores().slice(0,3);return top.length?`<p class="sub" style="margin:-.4em 0 1em">For ${esc(scopeLabel())}: points delivered, commitment kept and estimate accuracy.</p>${podium(top)}`:'<div class="empty">The top 3 appears once tasks are finished.</div>'}

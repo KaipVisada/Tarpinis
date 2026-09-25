@@ -47,17 +47,18 @@ async function setField(id,f,v){
 }
 /* several people can share a task; stored as a map so two people adding at once don't overwrite each other */
 function addAssignee(id,pid){
-  return act(m=>{const t=task(id);if(!t||!pid||t.assignees.includes(pid))return;
+  return act(m=>{if(m.access!=="admin"){toast("Only admins change who works on a task.");return false}const t=task(id);if(!t||!pid||t.assignees.includes(pid))return;
     return taskUpdate(id,{assignees:{[pid]:{at:Date.now()}}},pid===m.id?"joined this task":`added ${mName(pid)} to this task`,m.id)});
 }
 function removeAssignee(id,pid){
-  return act(m=>{const t=task(id);if(!t||!t.assignees.includes(pid))return;
+  return act(m=>{if(m.access!=="admin"){toast("Only admins change who works on a task.");return false}const t=task(id);if(!t||!t.assignees.includes(pid))return;
     const patch={assignees:{[pid]:null}};if(t.legacyAssignee===pid)patch.assignee=null;
     return taskUpdate(id,patch,pid===m.id?"left this task":`removed ${mName(pid)} from this task`,m.id)});
 }
 async function trashTask(id){
   const t=task(id);if(!t)return;
   const ok=await act(async m=>{
+    if(m.access!=="admin"){toast("Only admins can delete tasks.");return false}
     if(!await ask({title:`Delete ${shortId(t)} ${t.title}?`,body:"It moves to the Trash. An admin can restore it from there.",ok:"Delete task",danger:true}))return false;
     return taskUpdate(id,{deleted:true,deletedAt:Date.now(),deletedBy:m.id},"deleted this task",m.id);
   });
@@ -73,6 +74,7 @@ function openNew(defaults={}){
   $("#nfStatus").innerHTML=state.order.map(k=>`<option value="${k}">${COLS[k]}</option>`).join("");
   $("#nfSprint").value=defaults.sprintId&&sprint(defaults.sprintId)&&sprint(defaults.sprintId).state!=="closed"?defaults.sprintId:"";
   $("#nfStatus").value=defaults.status||"todo";
+  $("#nfProductWrap").hidden=!state.erp;$("#nfProduct").innerHTML=productOptions(null);$("#nfUnit").value="units";nfAuto=true;
   $("#newDlg").showModal();$("#nfTitle").focus();
 }
 $("#newForm").addEventListener("submit",async e=>{
@@ -83,12 +85,22 @@ $("#newForm").addEventListener("submit",async e=>{
     const data={title,type:$("#nfType").value,priority:+$("#nfPriority").value,points:+$("#nfPoints").value,estimateH:Math.max(0,+$("#nfEst").value||0),
       assignees:Object.fromEntries([...document.querySelectorAll("#nfPeople input:checked")].map((c,i)=>[c.value,{at:now+i}])),sprintId:$("#nfSprint").value||null,status:st,erpRef:$("#nfErp").value.trim(),
       key:nextKey(),createdAt:now,createdBy:m.id,startedAt:st!=="todo"?now:null,doneAt:st==="done"?now:null,blockedAt:st==="blocked"?now:null,
+      qty:Math.max(0,+$("#nfQty").value||0),unit:$("#nfUnit").value.trim()||"units",
+      productId:erpProduct($("#nfProduct").value)?Number($("#nfProduct").value):null,productName:erpProduct($("#nfProduct").value)?.name||"",
       description:"",labels:[],checklist:{},files:{},comments:{},worklogs:{},timers:{},activity:{[uid("a")]:{at:now,by:m.id,text:"created this task"}}};
     $("#newDlg").close();
     return enqueue("tasks/"+id,"set",data);
   });
   if(ok){toast("Task created");openTW(id)}
 });
+let nfAuto=true;
+function nfTitle(){
+  if(!nfAuto)return;const p=erpProduct($("#nfProduct").value),q=+$("#nfQty").value||0;
+  $("#nfTitle").value=p||q?`Assemble ${q?fmtN(q)+" ":""}${p?p.name:$("#nfUnit").value||"units"}`:"";
+}
+$("#nfTitle").addEventListener("input",e=>{nfAuto=!e.target.value.trim()});
+["nfProduct","nfQty","nfUnit"].forEach(id=>$("#"+id).addEventListener("input",nfTitle));
+$("#nfProduct").addEventListener("change",()=>{const p=erpProduct($("#nfProduct").value);if(p&&($("#nfUnit").value==="units"||!$("#nfUnit").value))$("#nfUnit").value="units";nfTitle()});
 document.querySelectorAll("dialog [data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
 
 /* ================= task window ================= */
@@ -134,8 +146,9 @@ function twMain(t,m){
   return `<div class="tw-main" data-keepscroll="main">
     <div>
       <label style="display:block"><span class="sr" style="position:absolute;left:-9999px">Title</span><input id="twTitle" class="tw-title" value="${esc(t.title)}" maxlength="160" aria-label="Title"></label>
-      <div class="tw-by"><span class="c-type" style="--tc:${t.type==="bug"?"var(--red)":t.type==="task"?"var(--cyan)":"var(--accent)"}">${TYPE_ICON[t.type]}</span>${TYPES[t.type]} created by ${esc(mName(t.createdBy))}${t.createdAt?` on ${fmtDay(t.createdAt)}`:""}</div>
+      <div class="tw-by"><span class="c-type" style="--tc:${t.type==="bug"?"var(--red)":t.type==="task"?"var(--cyan)":"var(--accent)"}">${TYPE_ICON[t.type]}</span>${isAdmin()?TYPES[t.type]+" created":"Created"} by ${esc(mName(t.createdBy))}${t.createdAt?` on ${fmtDay(t.createdAt)}`:""}</div>
     </div>
+    ${workSection(t)}
     <section class="tw-sec"><h3>Description</h3><textarea id="twDesc" rows="4" maxlength="20000" placeholder="What needs to be done, links, acceptance criteria">${esc(t.description)}</textarea></section>
     <section class="tw-sec"><h3>Checklist ${cl.length?`<small>${cd} of ${cl.length} done</small>`:""}</h3>
       ${cl.length?`<div class="bar" style="margin-bottom:8px"><i style="width:${Math.round(cd/cl.length*100)}%"></i></div>`:""}
@@ -169,6 +182,9 @@ function twDetails(t){
   const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${l}</option>`).join("");
   const addable=members().filter(m=>m.access!=="viewer"&&!t.assignees.includes(m.id));
   const cyc=t.doneAt&&t.startedAt?((t.doneAt-t.startedAt)/DAY).toFixed(1)+" days":null;
+  const peopleRow=`<span style="align-self:start;padding-top:6px">People</span><div class="people-edit">${t.assignees.map(id=>`<span class="pchip">${avatar(id)}<span>${esc(mName(id))}</span><button type="button" class="xbtn" data-unassign="${esc(id)}" aria-label="Remove ${esc(mName(id))} from this task">×</button></span>`).join("")||'<span class="muted" style="font-size:13px">No one yet</span>'}
+      ${addable.length?`<select id="twAddPerson" aria-label="Add a person"><option value="">+ Add a person</option>${addable.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("")}</select>`:""}</div>`;
+  if(!isAdmin())return `<div class="tw-pane"><div class="dl"><span>People</span><div class="people-edit">${t.assignees.map(id=>`<span class="pchip" style="padding-right:10px">${avatar(id)}<span>${esc(mName(id))}</span></span>`).join("")||'<span class="muted" style="font-size:13px">No one yet</span>'}</div></div>${t.status==="blocked"&&t.blockedReason?`<p style="margin:0;color:var(--red);font-size:14px">Blocked: ${esc(t.blockedReason)}</p>`:""}</div>`;
   return `<div class="tw-pane"><div class="dl">
     <span style="align-self:start;padding-top:6px">People</span><div class="people-edit">${t.assignees.map(id=>`<span class="pchip">${avatar(id)}<span>${esc(mName(id))}</span><button type="button" class="xbtn" data-unassign="${esc(id)}" aria-label="Remove ${esc(mName(id))} from this task">×</button></span>`).join("")||'<span class="muted" style="font-size:13px">No one yet</span>'}
       ${addable.length?`<select id="twAddPerson" aria-label="Add a person"><option value="">+ Add a person</option>${addable.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("")}</select>`:""}</div>
@@ -196,13 +212,15 @@ function twWorklog(t,m){
       ${others.map(([k,v])=>`<small class="muted">${esc(mName(k))} is timing this: <b data-since="${v.startedAt}">${elapsed(Date.now()-v.startedAt)}</b></small>`).join("")}</div>
     <div><div class="wl-sum"><span>Logged <b>${fmtH(t.loggedH)}</b></span><span class="muted">Estimate ${fmtH(t.estimateH)}${t.estimateH?` · ${pct}%`:""}</span></div>
       <div class="bar" style="margin-top:6px"><i class="${pct>100?"over":pct>85?"warn":""}" style="width:${Math.min(100,pct)}%"></i></div></div>
-    <form id="wlForm" class="panel" style="margin:0;padding:12px;box-shadow:none"><h3 style="margin:0 0 8px;font-size:14px">Add past worklog</h3>
+    ${t.qty?progHtml(t,"md"):""}
+    <form id="wlForm" class="panel" style="margin:0;padding:12px;box-shadow:none"><h3 style="margin:0 0 8px;font-size:14px">${t.qty?"Report work":"Add past worklog"}</h3>
       <div class="grid">${people.length>1?`<label class="full">Person<select id="wlWho">${people.map(x=>`<option value="${esc(x.id)}"${x.id===m.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></label>`:""}
         <label>Date<input id="wlDate" type="date" required max="${todayIso()}" value="${todayIso()}"></label>
-        <label>Hours<input id="wlHours" type="number" required min="0.25" max="24" step="0.25" placeholder="e.g. 1.5"></label>
+        ${t.qty?`<label>${esc(t.unit[0].toUpperCase()+t.unit.slice(1))} done<input id="wlUnits" type="number" min="0" step="1" placeholder="e.g. 4"></label>`:""}
+        <label>Hours<input id="wlHours" type="number" ${t.qty?"":"required "}min="0" max="24" step="0.25" placeholder="e.g. 1.5"></label>
         <label class="full">What did you do?<input id="wlNote" maxlength="300" placeholder="Optional"></label></div>
-      <div class="actions" style="margin-top:10px"><button class="btn small primary">Add worklog</button></div></form>
-    <div>${t.worklogs.slice().reverse().map(w=>`<div class="wl">${avatar(w.by)}<div><span>${esc(mName(w.by))}</span><small>${fmtDate(w.date)}${w.note?" · "+esc(w.note):""}${w.timer?" · timer":""}</small></div><b>${fmtH(w.hours)}</b>
+      <div class="actions" style="margin-top:10px"><button class="btn small primary">${t.qty?"Save report":"Add worklog"}</button></div></form>
+    <div>${t.worklogs.slice().reverse().map(w=>`<div class="wl">${avatar(w.by)}<div><span>${esc(mName(w.by))}</span><small>${fmtDate(w.date)}${w.note?" · "+esc(w.note):""}${w.timer?" · timer":""}</small></div><b>${w.units?`<span style="color:var(--pink)">+${fmtN(w.units)} ${esc(t.unit)}</span> `:""}${w.hours?fmtH(w.hours):""}</b>
       ${m&&(m.id===w.by||m.access==="admin")||!m?`<button type="button" class="xbtn" data-wldel="${esc(w.id)}" aria-label="Delete worklog">×</button>`:"<span></span>"}</div>`).join("")||'<div class="empty">No time logged yet.</div>'}</div>
   </div>`;
 }
@@ -240,6 +258,9 @@ twEl.addEventListener("change",e=>{
   if(el.id==="twDesc")return setField(t.id,"description",el.value);
   if(el.id==="cmtKind"){tw.cmtKind=el.value;return}
   if(el.id==="twFile"){uploadFiles(t.id,[...el.files]);el.value="";return}
+  if(el.id==="twProduct"){const p=erpProduct(el.value);setWork(t.id,{productId:p?Number(p.id):null,productName:p?p.name:""},p?`set the product to ${p.name}`:"removed the product");return}
+  if(el.id==="twQty"){const q=Math.max(0,Math.round((+el.value||0)*100)/100);if(q!==t.qty)setWork(t.id,{qty:q},q?`set the quantity to ${fmtN(q)} ${t.unit}`:"removed the quantity");return}
+  if(el.id==="twUnit"){const u=el.value.trim().slice(0,20)||"units";if(u!==t.unit)setWork(t.id,{unit:u},`changed the unit to ${u}`);return}
   if(el.id==="twAddPerson"){const pid=el.value;if(pid)addAssignee(t.id,pid).then(ok=>{if(!ok)renderTW()});return}
   const f=el.dataset.f;if(!f)return;
   let v=el.value;
@@ -261,11 +282,16 @@ twEl.addEventListener("submit",async e=>{
     if(ok){tw.cmtDraft="";const c=$("#cmtText");if(c)c.value="";toast("Comment posted")}}
   if(e.target.id==="wlForm"){
     const hours=Math.round((+$("#wlHours").value||0)*100)/100,date=$("#wlDate").value,note=$("#wlNote").value.trim();
-    if(!(hours>0)||hours>24){toast("Enter between 0.25 and 24 hours.");return}
+    const units=$("#wlUnits")?Math.max(0,Math.round((+$("#wlUnits").value||0)*100)/100):0;
+    if(hours<0||hours>24){toast("Hours must be between 0 and 24.");return}
+    if(!(hours>0)&&!(units>0)){toast(t.qty?`Enter the ${t.unit} done, the hours, or both.`:"Enter between 0.25 and 24 hours.");return}
     if(!isoOk(date)||date>todayIso()){toast("Pick a date that isn't in the future.");return}
     const ok=await act(m=>{const by=$("#wlWho")?$("#wlWho").value:m.id;if(by!==m.id&&m.access!=="admin"){toast("Only admins can log time for someone else.");return false}
-      return taskUpdate(t.id,{worklogs:{[uid("w")]:{by,date,hours,note,at:Date.now()}}},`logged ${fmtH(hours)} for ${fmtDate(date)}${by!==m.id?" on behalf of "+mName(by):""}`,m.id)});
-    if(ok){toast("Worklog added");["wlHours","wlNote"].forEach(i=>{const el=$("#"+i);if(el)el.value=""})}
+      const what=[units?`${fmtN(units)} ${t.unit} done`:"",hours?fmtH(hours):""].filter(Boolean).join(", ");
+      return taskUpdate(t.id,{worklogs:{[uid("w")]:{by,date,hours,units,note,at:Date.now()}}},`reported ${what} for ${fmtDate(date)}${by!==m.id?" on behalf of "+mName(by):""}`,m.id)});
+    if(ok){["wlHours","wlNote","wlUnits"].forEach(i=>{const el=$("#"+i);if(el)el.value=""});
+      const nt=task(t.id);const reached=t.qty&&units>0&&t.doneUnits+units>=t.qty&&t.status!=="done";
+      if(reached)toast(`Target reached: ${fmtN(t.doneUnits+units)} of ${fmtN(t.qty)} ${t.unit}.`,{label:"Mark as done",fn:()=>moveTask(t.id,"done")});else toast(units?"Progress saved":"Worklog added")}
   }
 });
 twEl.addEventListener("dragover",e=>{const z=e.target.closest("#twDrop");if(z&&e.dataTransfer&&[...e.dataTransfer.types].includes("Files")){e.preventDefault();z.classList.add("over")}});

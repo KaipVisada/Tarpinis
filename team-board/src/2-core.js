@@ -136,7 +136,7 @@ const str=(v,max=500)=>typeof v==="string"?v.slice(0,max):"";
 const isoOk=v=>/^\d{4}-\d{2}-\d{2}$/.test(v);
 const CLEAN={
   tasks:(id,o)=>{
-    const wl=vals(o.worklogs).map(w=>({...w,hours:Math.max(0,num(w.hours)),date:isoOk(w.date)?w.date:iso(new Date(num(w.at,Date.now()))),by:str(w.by,80),note:str(w.note,300),at:num(w.at)}));
+    const wl=vals(o.worklogs).map(w=>({...w,hours:Math.max(0,num(w.hours)),units:Math.max(0,num(w.units)),date:isoOk(w.date)?w.date:iso(new Date(num(w.at,Date.now()))),by:str(w.by,80),note:str(w.note,300),at:num(w.at)}));
     const timers={};if(o.timers&&typeof o.timers==="object")for(const[k,v]of Object.entries(o.timers))if(v&&num(v.startedAt))timers[k]={startedAt:num(v.startedAt)};
     return {id,title:str(o.title,300)||"Untitled",type:TYPES[o.type]?o.type:"task",status:COLS[o.status]?o.status:"todo",
     points:num(o.points),priority:[1,2,3].includes(o.priority)?o.priority:2,estimateH:num(o.estimateH),
@@ -150,6 +150,8 @@ const CLEAN={
     comments:vals(o.comments).map(c=>({...c,kind:KIND[c.kind]?c.kind:"comment",text:str(c.text,4000),at:num(c.at),resolved:!!c.resolved,by:str(c.by,80)})).sort((a,b)=>a.at-b.at),
     activity:vals(o.activity).map(a=>({...a,text:str(a.text,400),at:num(a.at),by:str(a.by,80)})).sort((a,b)=>a.at-b.at),
     worklogs:wl.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.at-b.at),loggedH:hr(wl.reduce((s,w)=>s+w.hours,0)),timers,
+    qty:Math.max(0,Math.round(num(o.qty)*100)/100),unit:str(o.unit,20)||"units",doneUnits:Math.round(wl.reduce((s,w)=>s+w.units,0)*100)/100,
+    productId:o.productId!=null&&o.productId!==""&&isFinite(Number(o.productId))?Number(o.productId):null,productName:str(o.productName,120),
     deleted:!!o.deleted,deletedAt:num(o.deletedAt)||null,deletedBy:str(o.deletedBy,80)}},
   members:(id,o)=>({id,name:str(o.name,80)||"Unnamed",title:str(o.title,60),access:ACCESS[o.access]?o.access:"worker",
     labels:Array.isArray(o.labels)?o.labels.filter(x=>typeof x==="string").map(x=>x.slice(0,30)).slice(0,10):[],

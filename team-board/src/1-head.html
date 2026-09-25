@@ -4,7 +4,7 @@
   --bg:#0f2817;--surface:#1a2332;--surface-2:#1f2937;--lane:rgba(15,20,25,.72);--input:#1a1f2e;
   --ink:#e5e7eb;--muted:#8b92b1;--line:#2d3748;--line-2:#3d4759;
   --accent:#5ac991;--accent-2:#3d8a6f;--accent-soft:rgba(90,201,145,.15);--on-accent:#0b1f15;--cyan:#00d9ff;
-  --amber:#f59e0b;--amber-soft:rgba(245,158,11,.15);--red:#ef4444;--red-soft:rgba(239,68,68,.12);
+  --pink:#e85a7a;--pink-soft:rgba(232,90,122,.15);--amber:#f59e0b;--amber-soft:rgba(245,158,11,.15);--red:#ef4444;--red-soft:rgba(239,68,68,.12);
   --card:linear-gradient(135deg,#1a2332 0%,#1f2937 100%);
   --font:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;
   color-scheme:dark;
@@ -283,6 +283,27 @@ label.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-
 .avs .avatar{margin:0;border:2px solid #1a2332;box-sizing:content-box}
 .avs .avatar+.avatar{margin-left:-8px}
 .avs .more-n{background:var(--line);color:var(--ink)}
+/* work orders & progress */
+.prog{display:grid;gap:4px}
+.prog-l{text-align:center;font-weight:700;color:var(--muted);font-size:12px;line-height:1}
+.prog-track{height:10px;border-radius:999px;background:#f4f4f6;border:1.5px solid var(--pink);overflow:hidden}
+.prog-track i{display:block;height:100%;background:var(--pink);border-radius:999px 0 0 999px;transition:width .5s ease}
+.prog-md .prog-track{height:14px}.prog-md .prog-l{font-size:14px}
+.prog-lg .prog-track{height:18px}.prog-lg .prog-l{font-size:16px}
+.prog-s{text-align:center;font-size:13px;color:var(--muted)}
+.card .prog{grid-column:1/-1}
+@media (prefers-reduced-motion:reduce){.prog-track i{transition:none}}
+.work{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:12px}
+.work h3{margin:0!important}
+.work-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media (max-width:600px){.work-grid{grid-template-columns:1fr 1fr}.work-grid .wg-prod{grid-column:1/-1}}
+.work-line{font-size:18px;font-weight:600}
+.work-line b{color:var(--pink);font-size:22px}
+.needs summary{cursor:pointer;font-weight:600;font-size:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.needs table{margin-top:8px;font-size:13px}
+.tvprog{display:flex;align-items:center;gap:.5em;font-size:.75em;color:var(--muted);white-space:nowrap}
+.tvprog .prog-track{width:5em;height:.6em}
+.erp-frame{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px solid var(--line);border-radius:8px;background:#0f1419;display:block}
 /* sprint overview (kept from v1) */
 .ov{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
 @media (max-width:1100px){.ov{grid-template-columns:minmax(0,1fr)}}
@@ -454,6 +475,7 @@ body.tv .chip{font-size:.8em}
       <button role="tab" data-v="team">Team</button>
       <button role="tab" data-v="top">Top 3</button>
       <button role="tab" data-v="insights">Insights</button>
+      <button role="tab" data-v="erp" class="admin-tab" id="erpTab" hidden>ERP</button>
       <button role="tab" data-v="admin" class="admin-tab" id="adminTab" hidden>Admin</button>
     </nav>
     <div class="hdr-actions">
@@ -466,6 +488,7 @@ body.tv .chip{font-size:.8em}
   </header>
   <div id="notice"></div>
   <main id="main"></main>
+  <div id="erpHost" hidden></div>
 </div>
 
 <!-- task window -->
@@ -476,7 +499,10 @@ body.tv .chip{font-size:.8em}
   <form class="pad" id="newForm">
     <h2>New task</h2>
     <div class="grid">
-      <label class="full">Title<input id="nfTitle" name="title" required maxlength="160" autocomplete="off"></label>
+      <label class="full" id="nfProductWrap">Product from the ERP<select id="nfProduct"></select></label>
+      <label>Quantity<input id="nfQty" type="number" min="0" step="1" placeholder="e.g. 15"></label>
+      <label>Unit<input id="nfUnit" maxlength="20" value="units"></label>
+      <label class="full">Title<input id="nfTitle" name="title" required maxlength="160" autocomplete="off" placeholder="e.g. Assemble 15 Defenders"></label>
       <label>Type<select id="nfType" name="type"><option value="story">Story</option><option value="task">Task</option><option value="bug">Bug</option></select></label>
       <label>Priority<select id="nfPriority" name="priority"><option value="1">High</option><option value="2" selected>Medium</option><option value="3">Low</option></select></label>
       <label>Story points<select id="nfPoints" name="points"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option><option>13</option></select></label>

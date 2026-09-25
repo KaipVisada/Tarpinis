@@ -11,7 +11,7 @@ function me(){
 }
 function touchSession(){if(session.id){session.until=Date.now()+lockMs();ss.set("tb.session",JSON.stringify(session))}}
 function unlock(m){session.id=m.id;touchSession();ls.set("tb.last",m.id);renderWho();render();if($("#twDlg").open)renderTW()}
-function lockNow(quiet){session.id=null;session.until=0;ss.set("tb.session","");if(state.view==="admin")state.view="overview";renderWho();render();if($("#twDlg").open)renderTW();if(!quiet)toast("Locked")}
+function lockNow(quiet){session.id=null;session.until=0;ss.set("tb.session","");if(state.view==="admin"||state.view==="erp")state.view="overview";renderWho();render();if($("#twDlg").open)renderTW();if(!quiet)toast("Locked")}
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,()=>{if(me())touchSession()},{passive:true}));
 setInterval(()=>{if(session.id&&!me())lockNow(true)},5000);
 
@@ -143,6 +143,7 @@ function renderWho(){
   box.innerHTML=m?`<span class="who">${avatar(m.id)}<span>${esc(firstName(m.name))}${m.access==="admin"?' <small style="color:var(--amber)">admin</small>':""}</span><button type="button" id="lockBtn" title="Lock so the next person must enter their PIN">Lock</button></span>`
     :`<button type="button" class="who locked" id="signInBtn" title="Unlock with your PIN">Locked. Tap to sign in</button>`;
   $("#adminTab").hidden=!(m&&m.access==="admin");
+  $("#erpTab").hidden=!(m&&m.access==="admin"&&window.__desktop);
 }
 document.addEventListener("click",e=>{
   if(e.target.closest("#lockBtn"))lockNow();
