@@ -20,10 +20,19 @@ const sprintTasks=()=>liveTasks().filter(t=>t.sprintId===state.sprintId);
 const openIssues=t=>t.comments.filter(c=>c.kind==="issue"&&!c.resolved).length;
 const blockedDays=t=>t.status==="blocked"&&t.blockedAt?Math.max(0,Math.floor((Date.now()-t.blockedAt)/DAY)):null;
 const daysLeft=s=>Math.max(0,Math.ceil((parseDate(s.end)+DAY-Date.now())/DAY));
+const isOn=(t,id)=>t.assignees.includes(id);
+const share=t=>1/Math.max(1,t.assignees.length);            // shared tasks split points and estimate evenly
+const loggedBy=(t,id)=>t.worklogs.filter(w=>w.by===id).reduce((a,w)=>a+w.hours,0);
+const names=t=>t.assignees.map(mName).join(", ");
+function avStack(t,max=3){
+  const a=t.assignees;if(!a.length)return '<span class="avatar add" title="No one assigned">+</span>';
+  return `<span class="avs" title="${esc(names(t))}">${a.slice(0,max).map(id=>avatar(id)).join("")}${a.length>max?`<span class="avatar more-n">+${a.length-max}</span>`:""}</span>`;
+}
+const r1=v=>Math.round(v*10)/10;
 const lastMe=()=>{const m=me();return m?m.id:ls.get("tb.last")||""};
 function filtered(list){
   const q=state.q.toLowerCase();
-  return list.filter(t=>(!state.who||(state.who==="none"?!t.assignee:t.assignee===state.who))&&(!state.type||t.type===state.type)
+  return list.filter(t=>(!state.who||(state.who==="none"?!t.assignees.length:isOn(t,state.who)))&&(!state.type||t.type===state.type)
     &&(!q||(shortId(t)+" "+t.title+" "+t.erpRef+" "+t.labels.join(" ")).toLowerCase().includes(q)));
 }
 function workDays(from,to){let n=0;const d=new Date(parseDate(from)),e=parseDate(to);while(d.getTime()<=e){const w=d.getDay();if(w>0&&w<6)n++;d.setDate(d.getDate()+1)}return n}
@@ -39,12 +48,12 @@ function filterBar(extra=""){
     ${lm&&member(lm)?`<button class="btn small" data-mine>${state.who===lm?"Show everyone":"Only my tasks"}</button>`:""}${extra}`;
 }
 function card(t){
-  const m=member(t.assignee);const bd=blockedDays(t);const cs=t.comments.length,oi=openIssues(t);const done=t.status==="done";
+  const bd=blockedDays(t);const cs=t.comments.length,oi=openIssues(t);const done=t.status==="done";
   const cl=t.checklist,cd=cl.filter(c=>c.done).length;const running=Object.keys(t.timers).length;
   return `<div class="card t-${t.type}${t.status==="blocked"?" blocked":""}${done?" is-done":""}" draggable="true" data-id="${esc(t.id)}" role="button" tabindex="0" aria-label="${esc(shortId(t)+" "+t.title)}">
     <span class="c-type" title="${TYPES[t.type]}">${TYPE_ICON[t.type]}</span>
     <div class="c-title"><span class="c-id">${esc(shortId(t))}</span>${esc(t.title)}</div>
-    ${m?`<span class="avatar" title="${esc(m.name)}">${esc(initials(m.name))}</span>`:`<span class="avatar add" title="Unassigned">+</span>`}
+    ${avStack(t)}
     ${t.status==="blocked"&&t.blockedReason?`<div class="reason">${esc(t.blockedReason)}</div>`:""}
     ${t.labels.length||t.erpRef?`<div class="labels">${t.labels.map(lblHtml).join("")}${t.erpRef?`<span class="chip erp">${esc(t.erpRef)}</span>`:""}</div>`:""}
     <div class="c-foot"><span class="pts-b" title="Story points">${t.points}</span>
@@ -96,7 +105,7 @@ function viewBacklog(){
   const back=filtered(liveTasks().filter(t=>!t.sprintId||!sprint(t.sprintId))).sort((a,b)=>a.priority-b.priority);
   const open=sortedSprints().filter(s=>s.state!=="closed");
   const rows=back.map(t=>`<tr><td><button class="linkish" data-open="${esc(t.id)}"><span class="c-id">${esc(shortId(t))}</span>${esc(t.title)}</button></td>
-    <td>${PRIO[t.priority]}</td><td class="num">${t.points}</td><td>${esc(t.erpRef)}</td><td>${esc(t.assignee?mName(t.assignee):"–")}</td>
+    <td>${PRIO[t.priority]}</td><td class="num">${t.points}</td><td>${esc(t.erpRef)}</td><td>${esc(names(t)||"–")}</td>
     <td><select data-plan="${esc(t.id)}" aria-label="Move to sprint"><option value="">Keep in backlog</option>${open.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("")}</select></td></tr>`).join("");
   const hasActive=state.sprints.some(s=>s.state==="active"&&!s.deleted);
   const sp=sortedSprints().reverse().map(s=>{
@@ -146,12 +155,12 @@ function cycleDays(list){const d=list.filter(t=>t.status==="done"&&t.startedAt&&
 function viewTeam(){
   const s=sprint(state.sprintId);const st=sprintTasks();const recent=liveTasks().filter(t=>t.doneAt&&t.doneAt>Date.now()-60*DAY);
   const rows=members().filter(m=>m.access!=="viewer").map(m=>{
-    const mine=st.filter(t=>t.assignee===m.id);
-    const hrs=mine.reduce((a,t)=>a+t.estimateH,0);const cap=capacity(m,s);
+    const mine=st.filter(t=>isOn(t,m.id));
+    const hrs=mine.reduce((a,t)=>a+t.estimateH*share(t),0);const cap=capacity(m,s);
     const pct=cap?Math.round(hrs/cap*100):(hrs?101:0);const cls=pct>100?"over":pct>85?"warn":"";
     const wip=mine.filter(t=>t.status==="doing"||t.status==="review").length;const blk=mine.filter(t=>t.status==="blocked").length;
-    const done=mine.filter(t=>t.status==="done").reduce((a,t)=>a+t.points,0);
-    const logged=mine.reduce((a,t)=>a+t.loggedH,0);const ct=cycleDays(recent.filter(t=>t.assignee===m.id));
+    const done=r1(mine.filter(t=>t.status==="done").reduce((a,t)=>a+t.points*share(t),0));
+    const logged=st.reduce((a,t)=>a+loggedBy(t,m.id),0);const ct=cycleDays(recent.filter(t=>isOn(t,m.id)));
     const off=offToday(m);const run=liveTasks().find(t=>t.timers[m.id]);const [al,ac]=AVAIL[m.availability];
     const offS=s?m.timeOff.filter(o=>o.to>=s.start&&o.from<=s.end):[];
     return `<tr><td><div class="mname">${avatar(m.id)}<div><b>${esc(m.name)}</b><small>${esc(m.title)}</small></div></div></td>
@@ -161,10 +170,10 @@ function viewTeam(){
       <small>${cap?`${fmtH(hrs)} planned of ${fmtH(cap)} available`:`${fmtH(hrs)} planned, no hours available`}</small></td>
       <td class="num">${wip}${wip>2?' <span class="chip blk">high</span>':""}</td><td class="num"${blk?' style="color:var(--red);font-weight:600"':""}>${blk}</td><td class="num">${done}</td><td class="num">${fmtH(logged)}</td>
       <td class="num">${ct==null?"–":ct.toFixed(1)+" d"}</td></tr>`}).join("");
-  const unassigned=st.filter(t=>!t.assignee&&t.status!=="done").length;
+  const unassigned=st.filter(t=>!t.assignees.length&&t.status!=="done").length;
   const m=me();
   return `<div class="panel"><div class="panel-h"><h2>Workload${s?" · "+esc(s.name):""}</h2>${m&&m.access==="admin"?`<button class="btn small" data-goadmin="members">Manage members</button>`:""}</div>
-    <p class="goal" style="margin-top:-4px">Load compares the estimated hours assigned in this sprint with each person's available hours (weekly hours, minus time off). Amber means above 85%, red means overbooked.${unassigned?` ${unassigned} open task${unassigned>1?"s are":" is"} unassigned.`:""}</p>
+    <p class="goal" style="margin-top:-4px">Load compares the estimated hours assigned in this sprint with each person's available hours (weekly hours, minus time off). When several people share a task, its estimate and points are split evenly between them. Logged shows each person's own worklogs. Amber means above 85%, red means overbooked.${unassigned?` ${unassigned} open task${unassigned>1?"s are":" is"} unassigned.`:""}</p>
     ${rows?`<div class="tbl-scroll"><table><thead><tr><th>Person</th><th>Status</th><th>Load</th><th class="num">In progress</th><th class="num">Blocked</th><th class="num">Done pts</th><th class="num">Logged</th><th class="num">Avg cycle (60d)</th></tr></thead><tbody>${rows}</tbody></table></div>`
       :'<div class="empty">No team members yet. An admin adds them from the Admin tab.</div>'}</div>`;
 }
@@ -225,7 +234,7 @@ function viewInsights(){
     <div class="stat"><b>${hr(logged)}<small style="font-size:16px"> / ${hr(est)} h</small></b><small>Logged vs estimated</small></div>
   </div>
   <div class="two"><div class="panel"><h2>Burndown · ${esc(s.name)}</h2>${burndown(s,ts)}</div>
-    <div class="panel"><h2>Blocked work</h2>${blocked.length?`<table><tbody>${blocked.map(t=>`<tr><td><button class="linkish" data-open="${esc(t.id)}">${esc(t.title)}</button>${t.blockedReason?`<br><small>${esc(t.blockedReason)}</small>`:""}</td><td>${esc(t.assignee?mName(t.assignee):"–")}</td><td class="num">${blockedDays(t)} d</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Nothing is blocked.</div>'}
+    <div class="panel"><h2>Blocked work</h2>${blocked.length?`<table><tbody>${blocked.map(t=>`<tr><td><button class="linkish" data-open="${esc(t.id)}">${esc(t.title)}</button>${t.blockedReason?`<br><small>${esc(t.blockedReason)}</small>`:""}</td><td>${esc(names(t)||"–")}</td><td class="num">${blockedDays(t)} d</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Nothing is blocked.</div>'}
     <h3 style="margin-top:18px">Cycle time by type</h3><table><tbody>${byType}</tbody></table></div></div>
   <div class="two"><div class="panel"><h2>Velocity</h2>${velocity()}</div>
     <div class="panel"><h2>Hours by ERP reference</h2>${erpRows?`<div class="tbl-scroll"><table><thead><tr><th>ERP ref</th><th class="num">Tasks</th><th class="num">Est.</th><th class="num">Logged</th></tr></thead><tbody>${erpRows}</tbody></table></div>`:'<div class="empty">No tasks in this sprint.</div>'}
@@ -309,11 +318,11 @@ function viewOverview(){
       <div><div class="sec-h"><button class="alt" data-chart="burndown" aria-pressed="${state.chartMode==="burndown"}">Burndown chart</button><button class="alt" data-chart="burnup" aria-pressed="${state.chartMode==="burnup"}">Burnup chart</button></div>
         <div class="box">${ovChart(s,ts)}</div></div>
       <div><div class="sec-h"><h3>Sprint stories</h3><button class="see ov-ctrl" data-goview="board">See all</button></div>
-        <div class="stories">${stories.map(t=>{const m=member(t.assignee);return `<button class="srow" data-open="${esc(t.id)}"><span class="avatar${m?"":" none"}" title="${esc(m?m.name:"Unassigned")}">${m?esc(initials(m.name)):"–"}</span><span class="tt">${esc(t.title)}</span><span class="ss"><span class="sdot" style="background:${STATUS_COLOR[t.status]}"></span>${COLS[t.status]}</span><span class="pp">${t.points}</span></button>`}).join("")||'<div class="empty">No tasks in this sprint yet.</div>'}</div></div>
+        <div class="stories">${stories.map(t=>{return `<button class="srow" data-open="${esc(t.id)}">${avStack(t,2)}<span class="tt">${esc(t.title)}</span><span class="ss"><span class="sdot" style="background:${STATUS_COLOR[t.status]}"></span>${COLS[t.status]}</span><span class="pp">${t.points}</span></button>`}).join("")||'<div class="empty">No tasks in this sprint yet.</div>'}</div></div>
     </div>
     <div class="sec-h"><h3>Team members</h3></div>
     <div class="team-strip"><div class="ppl">${team.map(m=>{
-      const mine=ts.filter(t=>t.assignee===m.id);const dp=mine.filter(t=>t.status==="done").reduce((a,t)=>a+t.points,0);
+      const mine=ts.filter(t=>isOn(t,m.id));const dp=r1(mine.filter(t=>t.status==="done").reduce((a,t)=>a+t.points*share(t),0));
       const c=offToday(m)||m.availability==="away"?"#6b7280":mine.some(t=>t.status==="blocked")?"var(--red)":mine.some(t=>t.status==="doing"||t.status==="review")?"var(--accent)":"#4a5568";
       return `<div class="tm"><span class="avatar">${esc(initials(m.name))}<i style="background:${c}"></i></span><div><b>${esc(firstName(m.name))}</b><small>${offToday(m)?"Off today":dp+" story points"}</small></div></div>`}).join("")||'<span class="empty">No team members yet.</span>'}</div>
       <button class="addm ov-ctrl" data-goview="team">Team workload</button></div>
@@ -337,9 +346,9 @@ function scopeSprintIds(){
 function scores(){
   const ids=new Set(scopeSprintIds());const ts=liveTasks().filter(t=>ids.has(t.sprintId));
   const rows=members().map(m=>{
-    const mine=ts.filter(t=>t.assignee===m.id);const done=mine.filter(t=>t.status==="done");
-    const committed=mine.reduce((a,t)=>a+t.points,0),D=done.reduce((a,t)=>a+t.points,0);
-    const est=done.reduce((a,t)=>a+t.estimateH,0),log=done.reduce((a,t)=>a+t.loggedH,0);
+    const mine=ts.filter(t=>isOn(t,m.id));const done=mine.filter(t=>t.status==="done");
+    const committed=mine.reduce((a,t)=>a+t.points*share(t),0),D=r1(done.reduce((a,t)=>a+t.points*share(t),0));
+    const est=done.reduce((a,t)=>a+t.estimateH*share(t),0),log=done.reduce((a,t)=>a+loggedBy(t,m.id),0);
     return {m,committed,D,C:committed?D/committed:0,acc:est&&log?Math.max(0,1-Math.abs(log-est)/est):null,n:done.length};
   }).filter(r=>r.D>0);
   const maxD=Math.max(1,...rows.map(r=>r.D));
@@ -363,13 +372,13 @@ function viewTop(){
   ${top.length?podium(top):'<div class="panel empty">No finished work in this period yet. The top 3 appears once tasks are marked done.</div>'}
   <div class="panel"><h2>How the score works</h2>
     <p style="margin:0 0 8px;max-width:72ch">Each person gets a score out of 100, built from three parts. Up to 50 points for story points delivered, compared with the highest delivery in the team. Up to 30 for finishing what they committed to in the sprint. Up to 20 for estimate accuracy: how close the hours they logged came to the estimate on finished tasks.</p>
-    <p style="margin:0;max-width:72ch;color:var(--muted)">Only finished tasks count toward delivery. Mixing the three parts means taking lots of easy tasks, or padding estimates, doesn't win on its own.</p></div>`;
+    <p style="margin:0;max-width:72ch;color:var(--muted)">Only finished tasks count toward delivery. On a shared task the points and estimate are split evenly between the people on it, and accuracy uses each person's own logged hours. Mixing the three parts means taking lots of easy tasks, or padding estimates, doesn't win on its own.</p></div>`;
 }
 
 /* ================= TV mode ================= */
 const PEOPLE_PER_PAGE=12;
 function tvSlides(){
-  const pages=Math.max(1,Math.ceil((members().length+(sprintTasks().some(t=>!t.assignee&&t.status!=="done")?1:0))/PEOPLE_PER_PAGE));
+  const pages=Math.max(1,Math.ceil((members().length+(sprintTasks().some(t=>!t.assignees.length&&t.status!=="done")?1:0))/PEOPLE_PER_PAGE));
   const people=Array.from({length:pages},(_,i)=>["people:"+i,"Who's working on what"+(pages>1?` (${i+1} of ${pages})`:"")]);
   return [["overview","Sprint overview"],...people,["board","Sprint board"],["top","Top 3"],["remarks","Latest issues and remarks"]];
 }
@@ -381,15 +390,15 @@ function tvGo(i){const n=tvSlides().length;state.tvSlide=((i%n)+n)%n;tvElapsed=0
 function tvPeople(page){
   const st=sprintTasks();const rank={blocked:0,doing:1,review:2,todo:3};
   const cards=members().filter(m=>m.access!=="viewer").map(m=>{
-    const mine=st.filter(t=>t.assignee===m.id);
+    const mine=st.filter(t=>isOn(t,m.id));
     const open=mine.filter(t=>t.status!=="done").sort((a,b)=>(rank[a.status]??9)-(rank[b.status]??9)||a.priority-b.priority);
     const done=mine.length-open.length;const blocked=open.some(t=>t.status==="blocked");const off=offToday(m);
     return `<div class="person${blocked?" warn":""}"><div class="ph"><span class="avatar">${esc(initials(m.name))}</span>
       <div><div class="nm">${esc(m.name)}</div><div class="sub">${off?"Off today":esc(m.title)}</div></div><div class="pdone">${done} done</div></div>
       ${open.slice(0,5).map(t=>{const oi=openIssues(t);const run=Object.keys(t.timers).length;
-        return `<div class="ptask"><span class="st st-${t.status}">${COLS[t.status]}${t.status==="blocked"?" "+(blockedDays(t)||0)+"d":""}</span><span class="pt">${esc(t.title)}</span>${run?'<span class="ic" style="color:var(--cyan)">⏱</span>':""}${oi?`<span class="ic">${oi} issue${oi>1?"s":""}</span>`:""}</div>`}).join("")||'<div class="ptask sub">No open tasks in this sprint</div>'}
+        return `<div class="ptask"><span class="st st-${t.status}">${COLS[t.status]}${t.status==="blocked"?" "+(blockedDays(t)||0)+"d":""}</span><span class="pt">${esc(t.title)}${t.assignees.length>1?`<span class="sub"> with ${esc(t.assignees.filter(x=>x!==m.id).map(x=>firstName(mName(x))).join(", "))}</span>`:""}</span>${run?'<span class="ic" style="color:var(--cyan)">⏱</span>':""}${oi?`<span class="ic">${oi} issue${oi>1?"s":""}</span>`:""}</div>`}).join("")||'<div class="ptask sub">No open tasks in this sprint</div>'}
       ${open.length>5?`<div class="more">+${open.length-5} more</div>`:""}</div>`});
-  const un=st.filter(t=>!t.assignee&&t.status!=="done");
+  const un=st.filter(t=>!t.assignees.length&&t.status!=="done");
   if(un.length)cards.push(`<div class="person"><div class="ph"><span class="avatar none">?</span><div><div class="nm">Unassigned</div><div class="sub">Needs an owner</div></div></div>
     ${un.slice(0,5).map(t=>`<div class="ptask"><span class="st st-${t.status}">${COLS[t.status]}</span><span class="pt">${esc(t.title)}</span></div>`).join("")}</div>`);
   return `<div class="people">${cards.slice(page*PEOPLE_PER_PAGE,(page+1)*PEOPLE_PER_PAGE).join("")||'<div class="empty">No team members yet.</div>'}</div>`;
@@ -399,7 +408,7 @@ function tvBoard(){
   return `<div class="tvboard" style="grid-template-columns:repeat(${state.order.length},minmax(0,1fr))">${state.order.map(k=>{
     const items=st.filter(t=>t.status===k).sort((a,b)=>a.priority-b.priority);
     return `<div class="tvcol" data-status="${k}"><h3><span>${COLS[k]}</span><span>${items.length}</span></h3>
-      ${items.slice(0,8).map(t=>{const m=member(t.assignee);return `<div class="tvitem"><span>${esc(t.title)}</span><span class="avatar${m?"":" none"}">${m?esc(initials(m.name)):"–"}</span></div>`}).join("")}
+      ${items.slice(0,8).map(t=>`<div class="tvitem"><span>${esc(t.title)}</span><span style="margin-left:auto">${avStack(t,3)}</span></div>`).join("")}
       ${items.length>8?`<div class="more">+${items.length-8} more</div>`:""}</div>`}).join("")}</div>`;
 }
 function tvTop(){const top=scores().slice(0,3);return top.length?`<p class="sub" style="margin:-.4em 0 1em">For ${esc(scopeLabel())}: points delivered, commitment kept and estimate accuracy.</p>${podium(top)}`:'<div class="empty">The top 3 appears once tasks are finished.</div>'}

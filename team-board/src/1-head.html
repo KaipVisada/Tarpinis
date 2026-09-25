@@ -267,6 +267,22 @@ label.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-
 .wl .avatar{margin:0}
 .wl small{display:block;color:var(--muted)}
 .wl b{white-space:nowrap}
+.people-pick{border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin:0;min-width:0}
+.people-pick legend{font-size:13px;color:var(--muted);padding:0 4px}
+#nfPeople{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px;max-height:180px;overflow:auto}
+.pchk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px;padding:4px 6px;border-radius:6px;cursor:pointer}
+.pchk:hover{background:var(--surface-2)}
+.pchk .avatar{margin:0}
+.pchk input{accent-color:var(--accent);width:16px;height:16px}
+.people-edit{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 2px 2px 3px;font-size:13px}
+.pchip .avatar{margin:0}
+.pchip .xbtn{width:22px;height:22px;font-size:15px;border-radius:50%}
+.people-edit select{width:auto!important;flex:1;min-width:130px}
+.avs{display:inline-flex;align-items:center;flex:none}
+.avs .avatar{margin:0;border:2px solid #1a2332;box-sizing:content-box}
+.avs .avatar+.avatar{margin-left:-8px}
+.avs .more-n{background:var(--line);color:var(--ink)}
 /* sprint overview (kept from v1) */
 .ov{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
 @media (max-width:1100px){.ov{grid-template-columns:minmax(0,1fr)}}
@@ -420,6 +436,8 @@ body.tv header.top,body.tv #notice{display:none}
 .tvitem .avatar{margin:0 0 0 auto;width:1.9em;height:1.9em;font-size:.75em}
 body.tv .remark{font-size:1.1em;padding:.7em 0}
 body.tv .chip{font-size:.8em}
+.avs .avatar.avatar{margin:0}
+.avs .avatar.avatar+.avatar{margin-left:-8px}
 </style>
 
 <div class="wrap">
@@ -463,10 +481,11 @@ body.tv .chip{font-size:.8em}
       <label>Priority<select id="nfPriority" name="priority"><option value="1">High</option><option value="2" selected>Medium</option><option value="3">Low</option></select></label>
       <label>Story points<select id="nfPoints" name="points"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option><option>13</option></select></label>
       <label>Estimate (hours)<input id="nfEst" name="estimateH" type="number" min="0" step="0.5" value="4"></label>
-      <label>Assignee<select id="nfAssignee" name="assignee"></select></label>
+
       <label>Sprint<select id="nfSprint" name="sprintId"></select></label>
       <label>Status<select id="nfStatus" name="status"></select></label>
       <label>ERP reference<input id="nfErp" name="erpRef" placeholder="e.g. PO-2291" maxlength="60"></label>
+      <fieldset class="full people-pick"><legend>People working on it</legend><div id="nfPeople"></div></fieldset>
     </div>
     <div class="actions">
       <button class="btn primary" id="nfCreate">Create task</button>

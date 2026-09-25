@@ -25,7 +25,6 @@ function moveTask(id,status){
 }
 const FIELD_LABEL={title:"the title",type:"the type",priority:"the priority",points:"the story points",estimateH:"the estimate",erpRef:"the ERP reference",labels:"the labels",blockedReason:"the blocked reason",description:"the description"};
 function fieldText(f,v,t){
-  if(f==="assignee")return v?`assigned this to ${mName(v)}`:"unassigned this";
   if(f==="sprintId")return `moved this to ${sprintName(v)}`;
   if(f==="title")return `renamed this to "${v}"`;
   if(f==="description")return "updated the description";
@@ -46,6 +45,16 @@ async function setField(id,f,v){
   const ok=await act(m=>taskUpdate(id,{[f]:v},fieldText(f,v,t),m.id));
   if(!ok)renderTW();
 }
+/* several people can share a task; stored as a map so two people adding at once don't overwrite each other */
+function addAssignee(id,pid){
+  return act(m=>{const t=task(id);if(!t||!pid||t.assignees.includes(pid))return;
+    return taskUpdate(id,{assignees:{[pid]:{at:Date.now()}}},pid===m.id?"joined this task":`added ${mName(pid)} to this task`,m.id)});
+}
+function removeAssignee(id,pid){
+  return act(m=>{const t=task(id);if(!t||!t.assignees.includes(pid))return;
+    const patch={assignees:{[pid]:null}};if(t.legacyAssignee===pid)patch.assignee=null;
+    return taskUpdate(id,patch,pid===m.id?"left this task":`removed ${mName(pid)} from this task`,m.id)});
+}
 async function trashTask(id){
   const t=task(id);if(!t)return;
   const ok=await act(async m=>{
@@ -58,12 +67,12 @@ async function trashTask(id){
 /* ================= new task dialog ================= */
 function openNew(defaults={}){
   const f=$("#newForm");f.reset();
-  $("#nfAssignee").innerHTML='<option value="">Unassigned</option>'+members().filter(m=>m.access!=="viewer").map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
+  const who0=me();
+  $("#nfPeople").innerHTML=members().filter(m=>m.access!=="viewer").map(m=>`<label class="pchk"><input type="checkbox" value="${esc(m.id)}"${who0&&who0.id===m.id?" checked":""}>${avatar(m.id)}<span>${esc(m.name)}</span></label>`).join("")||'<span class="muted">No team members yet.</span>';
   $("#nfSprint").innerHTML='<option value="">Backlog</option>'+sortedSprints().filter(s=>s.state!=="closed").map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
   $("#nfStatus").innerHTML=state.order.map(k=>`<option value="${k}">${COLS[k]}</option>`).join("");
   $("#nfSprint").value=defaults.sprintId&&sprint(defaults.sprintId)&&sprint(defaults.sprintId).state!=="closed"?defaults.sprintId:"";
   $("#nfStatus").value=defaults.status||"todo";
-  const m=me();if(m&&m.access!=="viewer")$("#nfAssignee").value=m.id;
   $("#newDlg").showModal();$("#nfTitle").focus();
 }
 $("#newForm").addEventListener("submit",async e=>{
@@ -72,7 +81,7 @@ $("#newForm").addEventListener("submit",async e=>{
   const ok=await act(async m=>{
     const now=Date.now();const st=$("#nfStatus").value;
     const data={title,type:$("#nfType").value,priority:+$("#nfPriority").value,points:+$("#nfPoints").value,estimateH:Math.max(0,+$("#nfEst").value||0),
-      assignee:$("#nfAssignee").value||null,sprintId:$("#nfSprint").value||null,status:st,erpRef:$("#nfErp").value.trim(),
+      assignees:Object.fromEntries([...document.querySelectorAll("#nfPeople input:checked")].map((c,i)=>[c.value,{at:now+i}])),sprintId:$("#nfSprint").value||null,status:st,erpRef:$("#nfErp").value.trim(),
       key:nextKey(),createdAt:now,createdBy:m.id,startedAt:st!=="todo"?now:null,doneAt:st==="done"?now:null,blockedAt:st==="blocked"?now:null,
       description:"",labels:[],checklist:{},files:{},comments:{},worklogs:{},timers:{},activity:{[uid("a")]:{at:now,by:m.id,text:"created this task"}}};
     $("#newDlg").close();
@@ -158,11 +167,11 @@ function twSide(t,m,canEdit){
 }
 function twDetails(t){
   const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${l}</option>`).join("");
-  const assignees=members().filter(m=>m.access!=="viewer"||m.id===t.assignee);
-  if(t.assignee&&!assignees.some(m=>m.id===t.assignee)&&member(t.assignee))assignees.push(member(t.assignee));
+  const addable=members().filter(m=>m.access!=="viewer"&&!t.assignees.includes(m.id));
   const cyc=t.doneAt&&t.startedAt?((t.doneAt-t.startedAt)/DAY).toFixed(1)+" days":null;
   return `<div class="tw-pane"><div class="dl">
-    <span>Assignee</span><select id="twAssignee" data-f="assignee"><option value="">Unassigned</option>${assignees.map(m=>`<option value="${esc(m.id)}"${m.id===t.assignee?" selected":""}>${esc(m.name)}${m.deleted?" (removed)":""}</option>`).join("")}</select>
+    <span style="align-self:start;padding-top:6px">People</span><div class="people-edit">${t.assignees.map(id=>`<span class="pchip">${avatar(id)}<span>${esc(mName(id))}</span><button type="button" class="xbtn" data-unassign="${esc(id)}" aria-label="Remove ${esc(mName(id))} from this task">×</button></span>`).join("")||'<span class="muted" style="font-size:13px">No one yet</span>'}
+      ${addable.length?`<select id="twAddPerson" aria-label="Add a person"><option value="">+ Add a person</option>${addable.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("")}</select>`:""}</div>
     <span>Type</span><select id="twType" data-f="type">${opt(TYPES,t.type)}</select>
     <span>Priority</span><select id="twPriority" data-f="priority" data-num>${opt(PRIO,t.priority)}</select>
     <span>Story points</span><select id="twPoints" data-f="points" data-num>${[0,1,2,3,5,8,13,21].map(n=>`<option${n===t.points?" selected":""}>${n}</option>`).join("")}</select>
@@ -206,6 +215,7 @@ twEl.addEventListener("click",async e=>{
   if(d.feed){tw.feed=d.feed;return renderTW()}
   if(d.side){tw.side=d.side;return renderTW()}
   if(d.twdelete!=null)return trashTask(t.id);
+  if(d.unassign)return removeAssignee(t.id,d.unassign);
   if(d.cltoggle){const c=t.checklist.find(x=>x.id===d.cltoggle);if(c)act(m=>taskUpdate(t.id,{checklist:{[c.id]:{done:!c.done,doneBy:!c.done?m.id:null}}},`${c.done?"unchecked":"checked"} "${c.text}"`,m.id));return}
   if(d.cldel){const c=t.checklist.find(x=>x.id===d.cldel);if(c)act(m=>taskUpdate(t.id,{checklist:{[c.id]:null}},`removed checklist item "${c.text}"`,m.id));return}
   if(d.fopen){const f=t.files.find(x=>x.id===d.fopen);if(f)openFile(f);return}
@@ -230,11 +240,12 @@ twEl.addEventListener("change",e=>{
   if(el.id==="twDesc")return setField(t.id,"description",el.value);
   if(el.id==="cmtKind"){tw.cmtKind=el.value;return}
   if(el.id==="twFile"){uploadFiles(t.id,[...el.files]);el.value="";return}
+  if(el.id==="twAddPerson"){const pid=el.value;if(pid)addAssignee(t.id,pid).then(ok=>{if(!ok)renderTW()});return}
   const f=el.dataset.f;if(!f)return;
   let v=el.value;
   if(el.dataset.num!=null)v=Math.max(0,Number(v)||0);
   if(f==="labels")v=v.split(",").map(x=>x.trim().slice(0,30)).filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.toLowerCase()===x.toLowerCase())===i).slice(0,8);
-  if(f==="assignee"||f==="sprintId")v=v||null;
+  if(f==="sprintId")v=v||null;
   if(typeof v==="string")v=v.trim();
   setField(t.id,f,v);
 });

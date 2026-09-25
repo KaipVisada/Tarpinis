@@ -142,7 +142,7 @@ const CLEAN={
     points:num(o.points),priority:[1,2,3].includes(o.priority)?o.priority:2,estimateH:num(o.estimateH),
     key:o.key!=null?num(o.key,null):null,erpRef:str(o.erpRef,60),description:str(o.description,20000),blockedReason:str(o.blockedReason,200),
     labels:Array.isArray(o.labels)?o.labels.filter(x=>typeof x==="string").map(x=>x.slice(0,30)).slice(0,8):[],
-    assignee:typeof o.assignee==="string"&&o.assignee?o.assignee:null,sprintId:typeof o.sprintId==="string"&&o.sprintId?o.sprintId:null,
+    assignees:normAssignees(o),legacyAssignee:typeof o.assignee==="string"&&o.assignee?o.assignee:null,sprintId:typeof o.sprintId==="string"&&o.sprintId?o.sprintId:null,
     createdAt:num(o.createdAt,null),createdBy:str(o.createdBy,80),startedAt:num(o.startedAt)||null,doneAt:num(o.doneAt)||null,
     blockedAt:num(o.blockedAt)||null,blockedMs:num(o.blockedMs),
     checklist:vals(o.checklist).map(c=>({...c,text:str(c.text,300),done:!!c.done,order:num(c.order)})).sort((a,b)=>a.order-b.order),
@@ -160,6 +160,13 @@ const CLEAN={
   sprints:(id,o)=>({id,name:str(o.name,60)||"Sprint",goal:str(o.goal,200),state:["planned","active","closed"].includes(o.state)?o.state:"planned",
     start:isoOk(o.start)?o.start:todayIso(),end:isoOk(o.end)?o.end:todayIso(),
     deleted:!!o.deleted,deletedAt:num(o.deletedAt)||null,deletedBy:str(o.deletedBy,80)})};
+function normAssignees(o){
+  let list=[];const a=o.assignees;
+  if(Array.isArray(a))list=a.filter(x=>typeof x==="string"&&x);
+  else if(a&&typeof a==="object")list=Object.entries(a).filter(([k,v])=>v).sort((x,y)=>num(x[1].at)-num(y[1].at)).map(x=>x[0]);
+  if(typeof o.assignee==="string"&&o.assignee&&!list.includes(o.assignee))list.unshift(o.assignee);
+  return list.slice(0,20);
+}
 function rebuild(col){
   if(col==="config"){
     const b=raw.config.board||{},s=raw.config.settings||{};
@@ -173,6 +180,7 @@ function rebuild(col){
     state.settings=S;return;
   }
   state[col]=Object.entries(raw[col]).map(([id,o])=>{try{return CLEAN[col](id,o||{})}catch(e){console.error(e);return null}}).filter(Boolean);
+  if(col==="tasks")state.tasks.forEach(t=>{t.assignee=t.assignees[0]||null});
   if(col==="sprints")pickSprint();
 }
 function normOrder(o){const ok=Array.isArray(o)?o.filter((k,i)=>COLS[k]&&o.indexOf(k)===i):[];DEFAULT_ORDER.forEach(k=>{if(!ok.includes(k))ok.push(k)});return ok}
