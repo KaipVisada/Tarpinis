@@ -32,20 +32,28 @@ class Store {
     this.leases = new Map();
     this.listeners = new Set();
     this.dirty = false; this.timer = null;
+    this.status = { file: this.file, lastSaved: null, error: null, recoveredFrom: null };
+    this.statusListeners = new Set();
     fs.mkdirSync(path.join(dataDir, "backups"), { recursive: true });
     this.load();
   }
+  /* Pick the newest readable copy: store.json, an unfinished save (store.json.tmp) or the previous copy.
+     If Windows blocked the last save, the .tmp file holds the newest data, so nothing is lost. */
   load() {
-    for (const f of [this.file, path.join(this.dir, "store.prev.json")]) {
+    let best = null;
+    for (const f of [this.file, this.file + ".tmp", path.join(this.dir, "store.prev.json")]) {
       try {
         if (!fs.existsSync(f)) continue;
         const j = JSON.parse(fs.readFileSync(f, "utf8"));
-        this.seq = j.seq || 0;
-        for (const [p, d] of Object.entries(j.docs || {})) this.docs.set(p, { data: d.data, v: d.v || 1 });
-        if (f !== this.file) this.log.warn(`store.json was unreadable; loaded ${path.basename(f)} instead`);
-        return;
-      } catch (e) { this.log.error(`Could not read ${f}: ${e.message}`); }
+        if (!j || typeof j.docs !== "object") continue;
+        if (!best || (j.seq || 0) > (best.j.seq || 0)) best = { f, j };
+      } catch (e) { this.log.warn(`Skipped unreadable ${path.basename(f)}: ${e.message}`); }
     }
+    if (!best) return;
+    this.seq = best.j.seq || 0;
+    for (const [p, d] of Object.entries(best.j.docs || {})) this.docs.set(p, { data: d.data, v: d.v || 1 });
+    this.log.info(`Loaded ${this.docs.size} records from ${path.basename(best.f)}`);
+    if (best.f !== this.file) { this.status.recoveredFrom = path.basename(best.f); this.log.warn(`Recovered data from ${best.f}`); this.schedule(); }
   }
   snapshot() {
     const docs = {};
@@ -85,17 +93,37 @@ class Store {
     return { acquired: true, holder, expiresAt: new Date(now + ttlMs).toISOString() };
   }
   schedule() { this.dirty = true; if (!this.timer) this.timer = setTimeout(() => { this.timer = null; this.flush(); }, 300); }
+  /* Write the whole store to disk. Windows antivirus or OneDrive can briefly lock a file,
+     so the final step is retried and falls back to a plain overwrite. */
   flush() {
-    if (!this.dirty) return;
+    if (!this.dirty) return true;
     this.dirty = false;
     const json = JSON.stringify(this.snapshot());
     const tmp = this.file + ".tmp";
+    const pause = ms => { try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); } catch (e) {} };
+    let err = null;
     try {
       const fd = fs.openSync(tmp, "w"); fs.writeSync(fd, json); fs.fsyncSync(fd); fs.closeSync(fd);
-      if (fs.existsSync(this.file)) fs.copyFileSync(this.file, path.join(this.dir, "store.prev.json"));
-      fs.renameSync(tmp, this.file);
-      this.dailyBackup(json);
-    } catch (e) { this.log.error("Saving failed: " + e.message); this.dirty = true; setTimeout(() => this.schedule(), 2000); }
+      try { if (fs.existsSync(this.file)) fs.copyFileSync(this.file, path.join(this.dir, "store.prev.json")); } catch (e) { this.log.warn("Could not keep the previous copy: " + e.message); }
+      let done = false;
+      for (let i = 0; i < 8 && !done; i++) { try { fs.renameSync(tmp, this.file); done = true; } catch (e) { err = e; pause(60 * (i + 1)); } }
+      if (!done) { fs.writeFileSync(this.file, json); try { fs.unlinkSync(tmp); } catch (e) {} this.log.warn("Saved with a direct write because the file was locked: " + (err && err.message)); }
+      err = null;
+      try { this.dailyBackup(json); } catch (e) { this.log.warn("Daily backup failed: " + e.message); }
+    } catch (e) { err = e; }
+    if (err) {
+      this.log.error("SAVING FAILED: " + err.message);
+      this.dirty = true; setTimeout(() => this.schedule(), 2000);
+      this.setStatus({ error: `Can't save to ${this.file}: ${err.message}` });
+      return false;
+    }
+    this.setStatus({ lastSaved: Date.now(), error: null });
+    return true;
+  }
+  setStatus(p) {
+    const before = this.status.error;
+    Object.assign(this.status, p);
+    if (before !== this.status.error) for (const fn of this.statusListeners) { try { fn(this.status); } catch (e) {} }
   }
   dailyBackup(json) {
     const dir = path.join(this.dir, "backups"); const f = path.join(dir, `store-${today()}.json`);

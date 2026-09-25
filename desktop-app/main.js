@@ -1,21 +1,31 @@
 "use strict";
 /* Team Board desktop program (Electron). Starts the local server, then opens the board in
-   its own window. Data lives in a "data" folder next to Team Board.exe, so the whole
-   folder can be copied to another PC. */
+   its own window. Data lives in Documents\Team Board, so it survives the program folder
+   being moved, replaced by a newer version, or run from a temporary place. */
 const { app, BrowserWindow, Menu, shell, dialog, session } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const server = require("./server/index.js");
 
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 
+const seqOf = dir => { for (const f of ["store.json", "store.json.tmp", "store.prev.json"]) { try { return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")).seq || 0; } catch (e) {} } return -1; };
 function pickDataDir() {
   if (!app.isPackaged) return path.join(__dirname, "data");
-  const nextToExe = path.join(path.dirname(process.execPath), "data");
-  try { fs.mkdirSync(nextToExe, { recursive: true }); fs.accessSync(nextToExe, fs.constants.W_OK); return nextToExe; }
-  catch (e) { return path.join(app.getPath("userData"), "data"); }   // e.g. installed under Program Files
+  let dir;
+  try { dir = path.join(app.getPath("documents"), "Team Board"); fs.mkdirSync(dir, { recursive: true }); fs.accessSync(dir, fs.constants.W_OK); }
+  catch (e) { dir = path.join(app.getPath("userData"), "data"); fs.mkdirSync(dir, { recursive: true }); }
+  // Earlier versions saved next to the exe (or in AppData). Bring that data over if it's newer.
+  for (const old of [path.join(path.dirname(process.execPath), "data"), path.join(app.getPath("userData"), "data")]) {
+    if (path.resolve(old) === path.resolve(dir) || seqOf(old) <= seqOf(dir)) continue;
+    try { fs.cpSync(old, dir, { recursive: true, force: true }); fs.writeFileSync(path.join(old, "MOVED TO DOCUMENTS - Team Board.txt"), `This data was copied to ${dir} on ${new Date().toString()}.\r\nThe program now saves there.`); }
+    catch (e) { console.error("Could not move old data", e); }
+  }
+  return dir;
 }
 const dataDir = pickDataDir();
+const runningFromTemp = app.isPackaged && path.resolve(process.execPath).toLowerCase().startsWith(path.resolve(os.tmpdir()).toLowerCase());
 const cfgFile = path.join(dataDir, "config.json");
 function readCfg() { try { return { port: 8080, fullscreen: false, ...JSON.parse(fs.readFileSync(cfgFile, "utf8")) }; } catch (e) { return { port: 8080, fullscreen: false }; } }
 function writeCfg(c) { try { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(cfgFile, JSON.stringify(c, null, 2)); } catch (e) {} }
@@ -31,6 +41,8 @@ function createWindow() {
   });
   win.once("ready-to-show", () => win.show());
   win.loadURL(origin() + "/");
+  win.on("close", () => { if (srv) srv.flush(); });
+  win.on("session-end", () => { if (srv) srv.flush(); });      // Windows shutting down or logging off
   win.on("enter-full-screen", () => { cfg.fullscreen = true; writeCfg(cfg); });
   win.on("leave-full-screen", () => { cfg.fullscreen = false; writeCfg(cfg); });
   // links: our own pages open in a new window, everything else in the normal browser
@@ -51,6 +63,9 @@ function menu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: "Team Board", submenu: [
       { label: "Open the data folder", click: () => shell.openPath(dataDir) },
+      { label: "Where is my data saved?", click: () => { const st = srv.store.status; dialog.showMessageBox(win, { type: st.error ? "warning" : "info", title: "Your data",
+          message: st.error ? "Saving is failing right now." : "Your data is saved automatically.",
+          detail: `Folder: ${dataDir}\nRecords: ${srv.store.docs.size}\nLast saved: ${st.lastSaved ? new Date(st.lastSaved).toLocaleString() : "nothing changed yet this session"}${st.error ? "\n\nProblem: " + st.error : ""}\n\nDaily copies are in the backups folder inside it.` }); } },
       { label: "Open the backups folder", click: () => shell.openPath(path.join(dataDir, "backups")) },
       { type: "separator" },
       { label: "Start with Windows", type: "checkbox", checked: app.getLoginItemSettings().openAtLogin, click: i => app.setLoginItemSettings({ openAtLogin: i.checked }) },
@@ -84,8 +99,13 @@ app.whenReady().then(async () => {
   });
   menu();
   createWindow();
+  if (runningFromTemp) dialog.showMessageBox(win, { type: "warning", title: "Team Board is running from a temporary folder",
+    message: "Team Board was started from inside the zip file or a temporary folder.",
+    detail: `Your data is still saved safely in:\n${dataDir}\n\nBut Windows may delete this copy of the program. Quit, right-click the zip, choose "Extract All", and start Team Board.exe from the extracted folder (for example C:\\TeamBoard).` });
+  if (srv.store.status.recoveredFrom) srv.log.warn("Started from recovered data: " + srv.store.status.recoveredFrom);
 });
 app.on("second-instance", () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
 app.on("before-quit", () => { if (srv) srv.flush(); });
+app.on("will-quit", () => { if (srv) srv.flush(); });
 app.on("window-all-closed", () => { if (srv) srv.flush(); app.quit(); });
 process.on("uncaughtException", e => { try { srv && srv.log.error("Uncaught", e); } catch (x) {} });

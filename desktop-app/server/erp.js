@@ -77,9 +77,11 @@ class Erp {
     if (!isObj(db)) throw { code: "invalid_argument", message: "db must be an object" };
     const cur = this.version;
     if (replace || base === cur) { this.put(db); return { v: this.version, merged: false }; }
+    if (!base) throw { code: "invalid_argument", message: "The ERP screen never loaded its data, so it can't save. Reload the ERP tab." };
     const b = this.history.get(base);
-    if (!b) { this.log.warn(`ERP save from an unknown version ${base} (current ${cur}); merging against current`); }
-    const merged = merge3(b ? JSON.parse(b) : this.store.get("erp/main"), db, this.store.get("erp/main"));
+    // Unknown starting point (e.g. a phone left open across a restart): apply its additions and edits, never deletions
+    if (!b) this.log.warn(`ERP save from an unknown version ${base} (current ${cur}); applying without deletions`);
+    const merged = merge3(b ? JSON.parse(b) : defaults(), db, this.store.get("erp/main"));
     this.put(merged);
     return { v: this.version, merged: true, db: merged };
   }

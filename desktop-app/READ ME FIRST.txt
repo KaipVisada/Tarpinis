@@ -1,0 +1,60 @@
+TEAM BOARD  (team board + DroneForge Pro ERP in one program)
+============================================================
+
+INSTALL
+  1. Right-click TeamBoard-Windows.zip and choose "Extract All".
+     Do NOT run the program from inside the zip.
+  2. Move the extracted "Team Board-win32-x64" folder somewhere permanent,
+     for example C:\TeamBoard
+  3. Right-click "Team Board.exe" > Send to > Desktop (create shortcut).
+
+START
+  Double-click "Team Board.exe". The first time, Windows may ask:
+   - "Windows protected your PC": click "More info", then "Run anyway".
+   - Windows Firewall: click "Allow", so phones and laptops on the office
+     network can open the board.
+
+YOUR DATA  (this changed in version 1.1)
+  Everything is saved automatically, within a second of each change, in:
+      Documents\Team Board
+  It stays there when you close the program, restart the PC, or install a
+  newer version of Team Board. The first time version 1.1 starts, it moves
+  any data from the old place (the "data" folder next to the exe) into it.
+
+  Menu > Team Board > "Where is my data saved?" shows the folder, the number
+  of records and the last save time.
+  If saving ever fails, a red bar appears at the bottom of the screen.
+  Don't close the program then; tell whoever looks after it.
+
+  Inside Documents\Team Board:
+    store.json        all board and ERP data
+    store.prev.json   the copy before the last save
+    backups\          one full copy per day, last 60 days
+    files\            files attached to tasks
+    logs\             technical log, useful if something goes wrong
+  Copy the whole "Team Board" folder from Documents to a USB stick or cloud
+  drive now and then.
+
+ON THE TV
+  F11 = full screen. "TV mode" on the board rotates the overview, who's
+  working on what, the board, Top 3 and the latest issues.
+  Menu > Team Board > "Start with Windows" opens it at login.
+  Set Windows Settings > Power > Sleep to "Never" on this PC.
+
+FIRST SET-UP
+  1. Tap "Locked. Tap to sign in", enter your name, choose a PIN (admin).
+  2. Admin tab > Members > Add member, for each worker.
+
+MOVE YOUR EXISTING ERP DATA IN (once)
+  Open the old DroneForge_Pro_EU.html in your browser > Reports >
+  Export Data. Then in Team Board: ERP tab > Reports > Import Data.
+
+OTHER COMPUTERS AND PHONES
+  Menu > Help > "Phones and other computers" shows the address, for
+  example http://192.168.1.20:8080 . Open it in a browser on any device on
+  the same network. Team Board must be running on this PC.
+
+TO RESTORE A DAILY BACKUP
+  Quit the program. In Documents\Team Board, rename store.json to
+  store-broken.json. Copy the backup you want from backups\ into the
+  folder and rename it to store.json. Start the program.

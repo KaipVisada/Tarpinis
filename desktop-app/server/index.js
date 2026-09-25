@@ -42,6 +42,7 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
     if (/^tasks\/[^/]+$/.test(ev.path)) { try { erp.syncTask(ev.path.slice(6)); } catch (e) { log.error("ERP sync failed", e); } }
   });
   setInterval(() => { for (const c of clients) c.write(": ping\n\n"); }, 25000).unref();
+  store.statusListeners.add(st => { const msg = `event: status\ndata: ${JSON.stringify(st)}\n\n`; for (const c of clients) c.write(msg); });
 
   const send = (res, code, obj) => { const b = JSON.stringify(obj); res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" }); res.end(b); };
   const body = (req, limit) => new Promise((ok, bad) => {
@@ -68,6 +69,7 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
     if (p === "/api/events" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-store", Connection: "keep-alive" });
       res.write(`event: hello\ndata: ${JSON.stringify({ epoch, seq: store.seq })}\n\n`);
+      res.write(`event: status\ndata: ${JSON.stringify(store.status)}\n\n`);
       clients.add(res); req.on("close", () => clients.delete(res));
       return;
     }
@@ -91,7 +93,7 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
       fs.writeFileSync(path.join(blobDir, id + ".json"), JSON.stringify({ type, size: buf.length, at: Date.now() }));
       return send(res, 200, { id, url: "/_blob/" + id, sizeBytes: buf.length, contentType: type });
     }
-    if (p === "/api/info") return send(res, 200, { port: server.address().port, lan: lanAddresses(server.address().port), dataDir, local: isLocal(req) });
+    if (p === "/api/info") return send(res, 200, { port: server.address().port, lan: lanAddresses(server.address().port), dataDir, local: isLocal(req), save: store.status, records: store.docs.size });
     return send(res, 404, { code: "not_found" });
   }
 

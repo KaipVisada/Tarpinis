@@ -1,6 +1,6 @@
 # Team Board desktop program
 
-The team board and the DroneForge Pro ERP in one Windows program. It runs a small local
+The team board and the DroneForge Pro ERP in one Windows program. Data is saved in `Documents\\Team Board` (older versions saved next to the exe; 1.1 moves that data over on first start). It runs a small local
 server on the PC connected to the TV. Its own window shows the board (ERP tab for admins),
 and phones on the same network can open the board in a browser.
 
@@ -9,7 +9,7 @@ and phones on the same network can open the board in a browser.
 | Part | What it does |
 | --- | --- |
 | `main.js` | Electron shell: starts the server, opens the window (F11 full screen), handles downloads, recovers from crashes |
-| `server/store.js` | Document store saved to `data/store.json` (atomic writes, previous copy, daily backups kept 60 days) |
+| `server/store.js` | Document store saved to `store.json` (atomic writes with retries for locked files, previous copy, recovery of unfinished saves, daily backups kept 60 days) |
 | `server/erp.js` | ERP data as one document. Saves are merged record by record so screens don't overwrite each other. Tasks with a product and quantity get a matching Planning entry and Production order |
 | `server/index.js` | HTTP API, live updates (server-sent events), file attachments, static files |
 | `web-src/desktop-shim.js` | Gives the team board the same `window.claude.use("db")` API it has as an artifact, backed by the server |

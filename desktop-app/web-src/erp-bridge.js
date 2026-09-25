@@ -22,6 +22,7 @@
     return cached;
   }
   function saveDb(text, replace) {
+    if (!base) { try { fetchDb(); } catch (e) {} if (!base) throw new Error("the ERP data never loaded"); }
     const body = { base, db: JSON.parse(text), replace: !!replace };
     const r = xhr("POST", "/api/erp", body);
     base = r.v;

@@ -62,6 +62,7 @@
       notify(ev.path);
     });
     es.onerror = () => setBanner(true);
+    es.addEventListener("status", e => { const st = JSON.parse(e.data); saveBanner(st.error); });
   }
   let bannerEl = null;
   function setBanner(on) {
@@ -69,6 +70,12 @@
     bannerEl.style.display = on ? "block" : "none";
   }
 
+  let saveEl = null;
+  function saveBanner(msg) {
+    if (!saveEl) { saveEl = document.createElement("div"); saveEl.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:201;background:#b91c1c;color:#fff;text-align:center;padding:10px 14px;font:700 15px 'Segoe UI',sans-serif;display:none"; (document.body || document.documentElement).appendChild(saveEl); }
+    saveEl.textContent = msg ? "Changes are NOT being saved to disk. " + msg + " Keep the program open and ask for help; closing it now would lose recent changes." : "";
+    saveEl.style.display = msg ? "block" : "none";
+  }
   function docRef(path) {
     return {
       id: path.split("/").pop(), path,
