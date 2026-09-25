@@ -1,6 +1,6 @@
 # Team Board desktop program
 
-The team board and the DroneForge Pro ERP in one Windows program. Data is saved in `Documents\\Team Board` (older versions saved next to the exe; 1.1 moves that data over on first start). It runs a small local
+The team board and the DroneForge Pro ERP in one Windows program. Data is saved in `Documents\Team Board` (older versions saved next to the exe; 1.1 moves that data over on first start). It runs a small local
 server on the PC connected to the TV. Its own window shows the board (ERP tab for admins),
 and phones on the same network can open the board in a browser.
 
