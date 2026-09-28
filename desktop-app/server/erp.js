@@ -64,6 +64,30 @@ function normalize(d) {
   return o;
 }
 
+/* Accept any DroneForge export: the current (EU) layout, or the older DroneForge Pro layout
+   (products with a bom list, materials with reorderPoint, productionQueue, purchaseOrders). */
+function isOld(d) { return Array.isArray(d.productionQueue) || Array.isArray(d.purchaseOrders) || (Array.isArray(d.products) && d.products.some(p => p && Array.isArray(p.bom))) || (Array.isArray(d.materials) && d.materials.some(m => m && "reorderPoint" in m)); }
+function convertOld(d) {
+  const ids = new Map(); let next = 1;
+  const nid = (kind, v) => { const k = kind + ":" + v; if (!ids.has(k)) { const n = Number(v); ids.set(k, Number.isFinite(n) && n > 0 && n < 1e9 ? n : next++ + 1e6); } return ids.get(k); };
+  const arr = v => (Array.isArray(v) ? v.filter(x => x && typeof x === "object") : []);
+  const out = defaults();
+  out.suppliers = arr(d.suppliers).map(x => ({ id: nid("s", x.id), name: x.name || "Supplier", email: x.email || "", phone: x.phone || "", lead: Number(x.leadTime) || 7, terms: x.terms || "", rating: Number(x.rating) || 0 }));
+  out.materials = arr(d.materials).map(x => ({ id: nid("m", x.id), name: x.name || "Material", sku: x.sku || "", category: x.category || "Uncategorized", description: x.description || "", stock: Number(x.stock) || 0, reorder: Number(x.reorderPoint ?? x.reorder) || 0, cost: (Number(x.cost) || 0) / (Number(x.costQty) || 1), unit: x.unit || "pcs", vendor_id: x.supplierId ? nid("s", x.supplierId) : null }));
+  const matName = id => (out.materials.find(m => m.id === nid("m", id)) || {}).name || "Material";
+  const matCost = id => (out.materials.find(m => m.id === nid("m", id)) || {}).cost || 0;
+  out.products = arr(d.products).map(x => ({ id: nid("p", x.id), name: x.name || "Product", sku: x.sku || "", category: x.category || "General", description: x.description || "", createdAt: x.createdDate || new Date().toISOString() }));
+  let bi = 1;
+  arr(d.products).forEach(x => { const comps = arr(x.bom).map(c => ({ id: nid("m", c.materialId), name: matName(c.materialId), cost: matCost(c.materialId), qty: Number(c.quantity) || 1 }));
+    if (comps.length) out.bom.push({ id: bi++, product_id: nid("p", x.id), product: x.name, components: comps, totalCost: comps.reduce((a, c) => a + c.cost * c.qty, 0) }); });
+  const st = { scheduled: "Scheduled", "in-progress": "In Progress", completed: "Completed", cancelled: "Completed" };
+  out.production = arr(d.productionQueue).map((x, i) => ({ id: i + 1, name: x.productName || "Product", qty: Number(x.quantity) || 0, produced: Number(x.produced) || 0, status: st[x.status] || "Scheduled" }));
+  out.orders = arr(d.purchaseOrders).map((x, i) => ({ id: i + 1, num: x.orderNumber || x.num || `PO-${i + 1}`, supplier: x.supplierId ? nid("s", x.supplierId) : null, value: Number(x.total || x.value) || 0, status: String(x.status || "Pending").replace(/^\w/, c => c.toUpperCase()), delivery: x.expectedDelivery || x.delivery || "" }));
+  if (d.settings && typeof d.settings === "object") out.settings = { ...out.settings, company: d.settings.companyName || out.settings.company, currency: d.settings.currency === "USD" ? "USD" : "EUR" };
+  return out;
+}
+function looksLikeErp(d) { return isObj(d) && (COLLS.some(k => Array.isArray(d[k])) || isOld(d)); }
+
 class Erp {
   constructor(store, log = console) {
     this.store = store; this.log = log; this.history = new Map();
@@ -115,6 +139,18 @@ class Erp {
       if (u > 0) out[p.slice(6)] = { productId: Number(d.data.productId), units: Math.round(u * 100) / 100 };
     }
     return out;
+  }
+  /* import a whole DroneForge export (any layout); keeps a copy of what was there before */
+  importData(data, backupsDir) {
+    if (!looksLikeErp(data)) throw { code: "invalid_argument", message: "This file isn't a DroneForge ERP export." };
+    const old = isOld(data);
+    const db = normalize(old ? convertOld(data) : data);
+    try { const fs = require("fs"), path = require("path"); fs.mkdirSync(backupsDir, { recursive: true });
+      fs.writeFileSync(path.join(backupsDir, `erp-before-import-${new Date().toISOString().replace(/[:.]/g, "-")}.json`), JSON.stringify(this.store.get("erp/main"))); } catch (e) { this.log.warn("Could not keep a copy before import: " + e.message); }
+    const cur = this.db; if (cur.tbStock) db.tbStock = cur.tbStock;      // keep the team board's stock bookkeeping
+    db.audit = [this.audit("IMPORT", "Data", `Imported ${old ? "an older DroneForge Pro" : "a DroneForge"} export: ${db.products.length} products, ${db.materials.length} materials, ${db.suppliers.length} suppliers`), ...(db.audit || [])].slice(0, 100);
+    this.put(db);
+    return { v: this.version, format: old ? "old" : "current", counts: { products: db.products.length, materials: db.materials.length, suppliers: db.suppliers.length, bom: db.bom.length, production: db.production.length, planning: db.planning.length, orders: db.orders.length } };
   }
   audit(action, entity, details) {
     return { timestamp: new Date().toISOString(), user: "Team board", action, entity, details };
@@ -182,4 +218,4 @@ class Erp {
     return true;
   }
 }
-module.exports = { Erp, merge3, normalize };
+module.exports = { Erp, merge3, normalize, convertOld, looksLikeErp };

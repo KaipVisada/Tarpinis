@@ -31,8 +31,19 @@ const last = erp.lastIndexOf("</script>");
 must(erp, "function applyImportedData", "applyImportedData"); must(erp, "function loadDB", "loadDB");
 erp = erp.slice(0, last) + `
         /* desktop: imports replace the shared data instead of merging into it */
-        ;(function(){ const a = applyImportedData; window.applyImportedData = function(t){ erpStorage.replaceOnNextSave(); return a(t); };
-          window.__erpAdopt = function(){ loadDB(); }; })();
+        ;(function(){
+          /* imports go through the server: it understands old and new DroneForge files and keeps a copy of what was there */
+          window.applyImportedData = function(t){
+            let data; try { data = JSON.parse(t); } catch (e) { showToast('That file is not a valid JSON export', 'error'); return; }
+            const x = new XMLHttpRequest(); x.open('POST', '/api/erp/import', false); x.setRequestHeader('Content-Type', 'application/json');
+            try { x.send(JSON.stringify({ data })); } catch (e) { showToast('Could not reach the Team Board program', 'error'); return; }
+            let r = {}; try { r = JSON.parse(x.responseText); } catch (e) {}
+            if (x.status !== 200) { showToast(r.message || 'Import failed', 'error'); return; }
+            showToast('Imported ' + r.counts.products + ' products, ' + r.counts.materials + ' materials, ' + r.counts.suppliers + ' suppliers', 'success');
+            setTimeout(function(){ location.reload(); }, 900);
+          };
+          window.__erpAdopt = function(){ loadDB(); };
+        })();
     ` + erp.slice(last);
 fs.writeFileSync(path.join(out, "erp.html"), erp);
 

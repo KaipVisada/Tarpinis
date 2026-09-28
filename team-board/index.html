@@ -2321,7 +2321,8 @@ function admBackups(){
   const bs=state.backups.slice().sort((a,b)=>b.at-a.at);const KL={daily:"Daily",manual:"Manual",safety:"Safety copy",import:"Imported"};
   const docs=Object.keys(raw.tasks).length+Object.keys(raw.members).length+Object.keys(raw.sprints).length+state.logs.length+state.backups.reduce((a,b)=>a+1+b.parts,0)+3;
   return `<div class="panel"><div class="panel-h"><h2>Backups</h2><button class="btn primary small" data-bnow>Back up now</button>
-      ${downloads?`<button class="btn small" data-bexport>Download all data (JSON)</button>`:""}<button class="btn small" data-bimport>Restore from a file</button></div>
+      ${downloads?`<button class="btn small" data-bexport>Download all data (JSON)</button>`:""}<button class="btn small" data-bimport>Restore or import a file</button></div>
+    <p class="adm-note">"Restore or import a file" accepts a Team Board backup (restores the board) or a DroneForge ERP export, old or new (loads the ERP). You can also drag the .json file onto this window.</p>
     <p class="adm-note">${state.settings.dailyBackup?"A backup is made automatically once a day, the first time someone opens the board. ":"Daily backups are off (Settings). "}The last ${state.settings.keepDaily} daily and ${state.settings.keepOther} other backups are kept. Restoring first saves a safety copy of the current board, so a restore can be undone. For a copy outside this board, download the data now and then.</p>
     ${bs.length?`<div class="tbl-scroll"><table><thead><tr><th>When</th><th>Kind</th><th>Contents</th><th class="num">Size</th><th></th></tr></thead><tbody>${bs.map(b=>`<tr>
       <td><b>${fmtStamp(b.at)}</b><br><small>${timeAgo(b.at)}${b.by?" · "+esc(mName(b.by)):""}</small></td><td><span class="chip ${b.kind==="daily"?"ok":b.kind==="safety"?"warn":"info"}">${KL[b.kind]||b.kind}</span>${b.note&&b.kind!=="daily"?`<br><small>${esc(b.note)}</small>`:""}</td>
@@ -2460,14 +2461,40 @@ async function adminClick(d){
   },{admin:true});return true}
   return false;
 }
-$("#importFile").addEventListener("change",async e=>{
-  const f=e.target.files[0];e.target.value="";if(!f)return;
+/* One import for every kind of file: a Team Board backup restores the board; a DroneForge
+   export (old or new layout) goes into the ERP. */
+const ERP_KEYS=["machines","production","materials","suppliers","orders","quality","planning","products","bom","productionQueue","purchaseOrders"];
+async function importJsonFile(f){
   await act(async m=>{
-    let data;try{data=validBackup(JSON.parse(await f.text()))}catch(x){toast(x.message&&x.message.includes("backup")?x.message:"That file isn't a readable Team board backup.");return}
-    const c=countsOf(data);
-    if(!await ask({title:`Restore from ${f.name}?`,body:`It holds ${c.tasks} tasks, ${c.members} people and ${c.sprints} sprints, saved ${data.at?fmtStamp(data.at):"at an unknown time"}. It replaces the current board. A safety backup is made first.`,ok:"Restore",danger:true}))return;
-    await restoreData(data,`the file ${f.name}`,m);
+    let raw;try{raw=JSON.parse((await f.text()).replace(/^\ufeff/,""))}catch(x){toast(`${f.name} isn't a JSON file the program can read.`);return}
+    if(raw&&raw.format==="teamboard"){
+      let data;try{data=validBackup(raw)}catch(x){toast(x.message);return}
+      const c=countsOf(data);
+      if(!await ask({title:`Restore the board from ${f.name}?`,body:`It holds ${c.tasks} tasks, ${c.members} people and ${c.sprints} sprints, saved ${data.at?fmtStamp(data.at):"at an unknown time"}. It replaces the current board. A safety backup is made first.`,ok:"Restore",danger:true}))return;
+      return restoreData(data,`the file ${f.name}`,m);
+    }
+    if(raw&&typeof raw==="object"&&ERP_KEYS.some(k=>Array.isArray(raw[k]))){
+      if(!window.__desktop){toast("ERP data can only be imported in the desktop program.");return}
+      const n=k=>Array.isArray(raw[k])?raw[k].length:0;
+      if(!await ask({title:`Import ERP data from ${f.name}?`,body:`It holds ${n("products")} products, ${n("materials")} materials and ${n("suppliers")} suppliers. It replaces the ERP's current data. A copy of the current ERP data is saved in the backups folder first.`,ok:"Import",danger:true}))return;
+      try{const r=await fetch("/api/erp/import",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:raw})});const j=await r.json().catch(()=>({}));
+        if(!r.ok){toast(j.message||"The import failed.");return}
+        logEvent("backup",`imported ERP data from ${f.name}${j.format==="old"?" (older DroneForge layout, converted)":""}: ${j.counts.products} products, ${j.counts.materials} materials`,m.id);
+        const h=$("#erpHost");if(h)h.innerHTML="";   // reload the ERP tab next time it opens
+        toast(`Imported ${j.counts.products} products, ${j.counts.materials} materials and ${j.counts.suppliers} suppliers into the ERP${j.format==="old"?" (converted from the older layout)":""}.`);
+      }catch(x){toast("Couldn't reach the Team Board program.")}
+      return;
+    }
+    toast(`${f.name} isn't a Team Board backup or a DroneForge ERP export.`);
   },{admin:true});
+}
+$("#importFile").addEventListener("change",e=>{const f=e.target.files[0];e.target.value="";if(f)importJsonFile(f)});
+/* drag a .json file onto the window (admins) */
+document.addEventListener("dragover",e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes("Files")&&!e.target.closest("#twDlg"))e.preventDefault()});
+document.addEventListener("drop",e=>{
+  if(e.target.closest&&e.target.closest("#twDlg"))return;
+  const f=e.dataTransfer&&e.dataTransfer.files[0];if(!f)return;e.preventDefault();
+  if(/\.json$/i.test(f.name))importJsonFile(f);else toast("Drop a .json backup or ERP export here, or attach files inside a task.");
 });
 function saveSettings(){
   return act(async m=>{

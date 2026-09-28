@@ -91,6 +91,10 @@ function start({ dataDir, staticDir, port = 8080, host = "0.0.0.0", tries = 10 }
       try { return send(res, 200, erp.save(await json(req, 60 * 1024 * 1024))); }
       catch (e) { log.error("ERP save failed", e); return send(res, 400, { code: e.code || "invalid_argument", message: e.message || "" }); }
     }
+    if (p === "/api/erp/import" && req.method === "POST") {
+      try { const b = await json(req, 60 * 1024 * 1024); const r = erp.importData(b.data, path.join(dataDir, "backups")); log.info(`ERP import (${r.format}): ${JSON.stringify(r.counts)}`); return send(res, 200, r); }
+      catch (e) { log.error("ERP import failed", e); return send(res, 400, { code: e.code || "invalid_argument", message: e.message || "Import failed" }); }
+    }
     if (p === "/api/erp/flag" && req.method === "POST") {
       const { key, value } = await json(req);
       const flags = { ...(store.get("erp/flags") || {}) };
