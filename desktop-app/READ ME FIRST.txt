@@ -59,7 +59,7 @@ NEW IN VERSION 1.2
 
 UPDATES FROM NOW ON
   Later updates come as ONE small file (about 1.5 MB) named like
-  "Team Board update 1.2.3.asar". In Team Board: Help > Install update
+  "Team Board update 1.2.4.asar". In Team Board: Help > Install update
   from file, choose the file, click "Restart now". If an update ever
   fails to start, the program sets it aside and keeps working.
   Help > "Go back to the previous version" undoes an update.

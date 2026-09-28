@@ -37,7 +37,7 @@ function origin() { return `http://127.0.0.1:${srv.port}`; }
 function createWindow() {
   win = new BrowserWindow({
     width: 1440, height: 900, minWidth: 900, minHeight: 600, backgroundColor: "#0f2817", title: "Team Board",
-    autoHideMenuBar: true, fullscreen: !!cfg.fullscreen, show: false,
+    autoHideMenuBar: false, fullscreen: !!cfg.fullscreen, show: false,
     webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false }
   });
   win.once("ready-to-show", () => win.show());
