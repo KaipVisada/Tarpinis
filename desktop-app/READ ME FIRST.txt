@@ -59,7 +59,7 @@ NEW IN VERSION 1.2
 
 UPDATES FROM NOW ON
   Later updates come as ONE small file (about 1.5 MB) named like
-  "Team Board update 1.2.2.asar". In Team Board: Help > Install update
+  "Team Board update 1.2.3.asar". In Team Board: Help > Install update
   from file, choose the file, click "Restart now". If an update ever
   fails to start, the program sets it aside and keeps working.
   Help > "Go back to the previous version" undoes an update.
@@ -81,7 +81,8 @@ GPAIS PACKAGING (ERP tab > Compliance > GPAIS packaging)
   When a weight changes, edit the packaging and give the date it
   changes. Deliveries before that date keep the old weight. Corrections
   need a reason and are listed under History. The program doesn't send
-  anything to GPAIS; you enter the figures from the report there.
+  anything to GPAIS and never connects to any government system; you
+  enter the figures from the report there yourself.
 
 ON THE TV
   F11 = full screen. "TV mode" on the board rotates the overview, who's

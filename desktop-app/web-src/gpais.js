@@ -9,8 +9,9 @@
      gpDocs        shipments / invoices (incoming or outgoing) with item lines and shipment packaging
      gpRecords     calculated GPAIS accounting records (one per document line x packaging)
      gpPeriods     quarter locks;  gpSupplierInfo  supplier country / EU;  gpAudit  change history
-   Official GPAIS codes, rules and the GPAIS API are NOT built in. Codes are entered by an admin
-   with their source and marked verified or not. */
+   Stand-alone: it never connects to GPAIS or any government system, and makes no internet requests.
+   Official GPAIS codes and rules are NOT built in. Codes are entered by an admin with their source
+   and marked verified or not. */
 (function () {
   "use strict";
   const GP = window.GP = { view: "overview", recF: { q: "", quarter: "", material: "", supplier: "", status: "active", dir: "" }, repQ: "", repDir: "in", repEU: true, packItem: "", docF: { q: "", status: "" } };
@@ -474,7 +475,7 @@
         ${group(rows, r => r.item || "shipment", r => r.itemName).map(g => `<tr><td>${E(g.label)}</td><td style="text-align:right">${kg(g.weightMg)}</td></tr>`).join("")}</tbody></table></div></div>
       <h4 class="gp-h4">Documents in this report</h4><table class="data-table"><thead><tr><th>Date</th><th>Number</th><th>Partner</th><th>Country</th><th style="text-align:right">kg</th></tr></thead><tbody>
         ${docs.map(d => `<tr><td>${E(d.date)}</td><td class="gp-link" data-gpgo="records" data-gpdoc="${d.id}">${E(d.number)}</td><td>${E(d.partner || "")}</td><td>${E(d.country || "")}</td><td style="text-align:right">${kg(rows.filter(r => r.docId === d.id).reduce((s, r) => s + r.weightMg, 0))}</td></tr>`).join("")}</tbody></table>
-      <p class="gp-muted" style="margin-top:1rem">This summary is made from your own records. Check the GPAIS codes, categories and which flows must be declared against the official GPAIS instructions before submitting. The program doesn't send anything to GPAIS.</p></div>`;
+      <p class="gp-muted" style="margin-top:1rem">This summary is made from your own records. Check the GPAIS codes, categories and which flows must be declared against the official GPAIS instructions before submitting. The program never connects to GPAIS; it only prepares the figures.</p></div>`;
   }
   function setPeriod(close) {
     D(); const q = GP.repQ || quarterOf(today()); let p = db.gpPeriods.find(x => x.id === q);
@@ -575,7 +576,7 @@
         <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"><button class="btn btn-primary" data-gpimport${p.count.valid + p.count.warning ? "" : " disabled"}>Import ${p.count.valid + p.count.warning} row(s)</button><button class="btn btn-secondary" data-gpimpclear>Cancel</button><span class="gp-muted">Invalid and duplicate rows are left out.</span></div>` : ""}</div>
       <div class="dashboard-card"><h3 class="card-title">Export</h3><p class="gp-muted">The quarterly report has its own Excel and CSV export. Here you can export all records or the packaging definitions.</p>
         <button class="btn btn-secondary" data-gpexpall="records">All accounting records (Excel)</button> <button class="btn btn-secondary" data-gpexpall="packaging">Packaging definitions (Excel)</button></div>
-      <div class="dashboard-card"><h3 class="card-title">Sending to GPAIS</h3><p class="gp-muted">The program doesn't send data to GPAIS. That needs the official GPAIS API description and access, which aren't available here. Submit the quarterly figures in GPAIS yourself, using the report and export. The records are grouped by GPAIS code so a direct connection can be added later without changing how they're kept.</p></div>`;
+      <div class="dashboard-card"><h3 class="card-title">Stand-alone</h3><p class="gp-muted">This tab works only on this computer. It never connects to GPAIS or any government website, and never logs in or sends data anywhere. Everything stays in your Team Board data. You use the report and the Excel export yourself.</p></div>`;
   }
   function parseImport(file) {
     if (!window.XLSX) { toast("The spreadsheet reader isn't loaded.", "error"); return; }
