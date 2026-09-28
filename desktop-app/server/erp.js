@@ -29,6 +29,7 @@ function mergeArray(base, mine, theirs) {
       if (bx && S(bx) === S(mx)) continue;                                                  // untouched by me
       if (bx && idx.has(k)) { out[idx.get(k)] = mergeFields(bx, mx, out[idx.get(k)]); continue; }  // edited by me: only the fields I changed
       if (bx && !idx.has(k)) continue;                                                      // edited by me, deleted by them: keep deleted
+      if (!bx && idx.has(k) && !Number.isFinite(Number(k))) continue;                       // text ids (GPAIS records) name the same thing: keep one
       if (idx.has(k) && S(out[idx.get(k)]) !== S(mx)) {                                     // both added the same id: renumber mine
         const numeric = [...out, ...mine].map(x => x && Number(x.id)).filter(Number.isFinite);
         const nx = clone(mx); nx.id = (numeric.length ? Math.max(...numeric) : 0) + 1;
@@ -148,6 +149,7 @@ class Erp {
     try { const fs = require("fs"), path = require("path"); fs.mkdirSync(backupsDir, { recursive: true });
       fs.writeFileSync(path.join(backupsDir, `erp-before-import-${new Date().toISOString().replace(/[:.]/g, "-")}.json`), JSON.stringify(this.store.get("erp/main"))); } catch (e) { this.log.warn("Could not keep a copy before import: " + e.message); }
     const cur = this.db; if (cur.tbStock) db.tbStock = cur.tbStock;      // keep the team board's stock bookkeeping
+    for (const k of Object.keys(cur)) if (/^gp[A-Z]/.test(k) && db[k] === undefined) db[k] = cur[k];   // keep GPAIS packaging accounting unless the file has its own
     db.audit = [this.audit("IMPORT", "Data", `Imported ${old ? "an older DroneForge Pro" : "a DroneForge"} export: ${db.products.length} products, ${db.materials.length} materials, ${db.suppliers.length} suppliers`), ...(db.audit || [])].slice(0, 100);
     this.put(db);
     return { v: this.version, format: old ? "old" : "current", counts: { products: db.products.length, materials: db.materials.length, suppliers: db.suppliers.length, bom: db.bom.length, production: db.production.length, planning: db.planning.length, orders: db.orders.length } };

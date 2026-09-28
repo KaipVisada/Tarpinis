@@ -45,6 +45,11 @@ erp = erp.slice(0, last) + `
           window.__erpAdopt = function(){ loadDB(); };
         })();
     ` + erp.slice(last);
+// GPAIS packaging accounting: an extra ERP tab (web-src/gpais.js), loaded after the ERP's own script
+must(erp, "</body>", "</body>"); must(erp, "</head>", "</head>");
+erp = erp.replace("</head>", '    <link rel="stylesheet" href="gpais.css">\n</head>');
+const endBody = erp.lastIndexOf("</body>");
+erp = erp.slice(0, endBody) + '<script src="vendor/xlsx.full.min.js"></script>\n<script src="gpais.js"></script>\n' + erp.slice(endBody);
 fs.writeFileSync(path.join(out, "erp.html"), erp);
 
 for (const f of fs.readdirSync(path.join(root, "web-src"))) fs.copyFileSync(path.join(root, "web-src", f), path.join(out, f));

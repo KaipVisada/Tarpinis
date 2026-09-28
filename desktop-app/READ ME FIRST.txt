@@ -59,10 +59,29 @@ NEW IN VERSION 1.2
 
 UPDATES FROM NOW ON
   Later updates come as ONE small file (about 1.5 MB) named like
-  "Team Board update 1.2.1.asar". In Team Board: Help > Install update
+  "Team Board update 1.2.2.asar". In Team Board: Help > Install update
   from file, choose the file, click "Restart now". If an update ever
   fails to start, the program sets it aside and keeps working.
   Help > "Go back to the previous version" undoes an update.
+
+GPAIS PACKAGING (ERP tab > Compliance > GPAIS packaging)
+  1. Materials & GPAIS codes: enter the official GPAIS code for each
+     material you use, and note where the code comes from. The program
+     has no codes built in.
+  2. Item packaging: for each item you buy, enter the packaging on ONE
+     unit (box, bag, share of a pallet), with its material and weight.
+  3. Shipments & invoices > + Incoming shipment: for each delivery from
+     a supplier, enter the invoice number, date, country, EU tick, items
+     and quantities, plus any pallets or film on the whole delivery.
+     "Save and post" records the packaging. The same invoice from the
+     same supplier can't be entered twice.
+  4. At the end of the quarter: Quarterly report > choose the quarter >
+     Export Excel, then "Close" the quarter. Data check lists anything
+     missing before you close.
+  When a weight changes, edit the packaging and give the date it
+  changes. Deliveries before that date keep the old weight. Corrections
+  need a reason and are listed under History. The program doesn't send
+  anything to GPAIS; you enter the figures from the report there.
 
 ON THE TV
   F11 = full screen. "TV mode" on the board rotates the overview, who's
