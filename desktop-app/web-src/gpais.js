@@ -242,7 +242,7 @@
       ${d.lines.map((l, i) => { const packs = l.item ? packOf(l.item, d.date) : [];
         return `<tr><td><select data-gdline="${i}" data-f="item"><option value="">Choose an item…</option>${its.map(x => `<option value="${x.key}"${x.key === l.item ? " selected" : ""}>${E(x.name)}${x.sku ? " (" + E(x.sku) + ")" : ""} · ${x.kind}</option>`).join("")}</select></td>
           <td><input data-gdline="${i}" data-f="qty" value="${l.qtyMilli == null ? "" : qn(l.qtyMilli)}" inputmode="decimal"></td>
-          <td>${!l.item ? "" : packs.length ? packs.map(p => `${E(p.name)} ${kg(p.weightMg)} kg`).join(", ") : `<span class="badge danger">No packaging defined</span> <a href="#" class="gp-link" data-gpdefine="${l.item}">Define</a>`}</td>
+          <td>${!l.item ? "" : packs.length ? `${packs.length} part${packs.length === 1 ? "" : "s"} · ${kg(packs.reduce((a, p) => a + perUnit(p), 0))} kg per unit` : `<span class="badge danger">No packaging defined</span> <a href="#" class="gp-link" data-gpdefine="${l.item}">Define</a>`}</td>
           <td><button class="btn btn-small btn-danger" data-gdrm="${i}">×</button></td></tr>`; }).join("")}
       </tbody></table><button class="btn btn-small btn-secondary" data-gdadd>+ Add item</button>
       <h4 class="gp-h4">Shipment packaging <small class="gp-muted">(pallets, wrap film, crates that came with the whole delivery, not per item)</small></h4>
@@ -296,24 +296,115 @@
     if (andPost) postDoc(doc.id); else { toast("Draft saved"); GP.view = "docs"; render(); }
   }
 
-  /* ---------- item packaging (versioned) ---------- */
+  /* ---------- item packaging (versioned), grouped by category ---------- */
+  const perUnit = p => mulMilli(p.weightMg || 0, p.qtyPerUnitMilli || 1000);
+  function packSections(list) {   // [{cat, lines}] in category order; lines without a category last
+    const cats = D().gpCategories.filter(c => c.active !== false || list.some(p => p.categoryId === c.id));
+    const out = cats.map(c => ({ id: c.id, name: c.name, lines: list.filter(p => p.categoryId === c.id) }));
+    const none = list.filter(p => !cat(p.categoryId)); if (none.length) out.push({ id: "", name: "No category", lines: none });
+    return out;
+  }
   function vPackaging() {
     const its = items(); if (!GP.packItem && its.length) GP.packItem = (itemsNeedingPackaging()[0] || its[0]).key;
-    const it = item(GP.packItem); const d = today();
-    const all = D().gpPack.filter(p => p.item === GP.packItem).sort((a, b) => (a.name.localeCompare(b.name)) || ((a.validFrom || "") < (b.validFrom || "") ? -1 : 1));
-    const cur = packOf(GP.packItem, d); const total = cur.reduce((s, p) => s + mulMilli(p.weightMg || 0, p.qtyPerUnitMilli || 1000), 0);
+    const it = item(GP.packItem); const d = today(); GP.openSec = GP.openSec || {};
+    const cur = packOf(GP.packItem, d); const total = cur.reduce((s, p) => s + perUnit(p), 0);
+    const old = D().gpPack.filter(p => p.item === GP.packItem && !cur.includes(p)).sort((a, b) => ((a.validFrom || "") < (b.validFrom || "") ? 1 : -1));
+    const line = (p, dim) => { const used = packUsed(p.id);
+      return `<tr style="${dim ? "opacity:.55" : ""}"><td><b>${E(p.name)}</b>${p.notes ? `<br><small class="gp-muted">${E(p.notes)}</small>` : ""}</td><td>${E((mat(p.materialId) || {}).name || "")}${!p.materialId ? '<span class="badge danger">missing</span>' : ""}</td>
+        <td style="text-align:right">${p.weightMg == null ? '<span class="badge danger">missing</span>' : kg(p.weightMg) + " kg"}</td><td style="text-align:right">${qn(p.qtyPerUnitMilli || 1000)}</td><td style="text-align:right">${kg(perUnit(p))} kg</td><td>${p.reusable ? "Yes" : ""}</td>
+        <td><small>${p.validFrom || "always"} → ${p.validTo || "now"}${p.active === false ? " · inactive" : ""}${used ? ` · used ${used}×` : ""}</small></td>
+        <td style="white-space:nowrap;text-align:right"><button class="btn btn-small btn-secondary" data-gppackedit="${p.id}">Edit</button> <button class="btn btn-small btn-danger" data-gppackdel="${p.id}">${used ? "Deactivate" : "Remove"}</button></td></tr>`; };
+    const head = `<thead><tr><th>Packaging</th><th>Material</th><th style="text-align:right">Weight each</th><th style="text-align:right">Pieces per unit</th><th style="text-align:right">Per unit</th><th>Reusable</th><th>Valid</th><th></th></tr></thead>`;
     return `<div class="dashboard-card"><div class="card-header"><h3 class="card-title" style="margin:0;padding:0;border:0">Packaging per item</h3>
       <select id="gpPackItem" style="max-width:420px">${its.map(x => `<option value="${x.key}"${x.key === GP.packItem ? " selected" : ""}>${E(x.name)}${x.sku ? " (" + E(x.sku) + ")" : ""} · ${x.kind}${packOf(x.key, d).length ? "" : " ⚠"}</option>`).join("")}</select></div>
-      <p class="gp-muted">What packaging comes with ONE unit of this item: the box it's in, the bag, the share of a pallet. Keep the parts separate, because GPAIS is reported by material. When a weight changes, the new version starts on a date and older documents keep the old weight.</p>
-      ${it ? `<table class="data-table"><thead><tr><th>Packaging</th><th>Material</th><th>Category</th><th style="text-align:right">Weight each</th><th style="text-align:right">Pieces per unit</th><th>Reusable</th><th>Valid</th><th></th></tr></thead><tbody>
-      ${all.map(p => { const now = cur.includes(p); const used = packUsed(p.id);
-        return `<tr style="${now ? "" : "opacity:.55"}"><td><b>${E(p.name)}</b>${p.notes ? `<br><small class="gp-muted">${E(p.notes)}</small>` : ""}</td><td>${E((mat(p.materialId) || {}).name || "")}${!p.materialId ? '<span class="badge danger">missing</span>' : ""}</td><td>${E((cat(p.categoryId) || {}).name || "")}${!p.categoryId ? '<span class="badge danger">missing</span>' : ""}</td>
-          <td style="text-align:right">${p.weightMg == null ? '<span class="badge danger">missing</span>' : kg(p.weightMg) + " kg"}</td><td style="text-align:right">${qn(p.qtyPerUnitMilli || 1000)}</td><td>${p.reusable ? "Yes" : "No"}</td>
-          <td><small>${p.validFrom || "always"} → ${p.validTo || "now"}${p.active === false ? " · inactive" : ""}${used ? ` · used ${used}×` : ""}</small></td>
-          <td style="white-space:nowrap"><button class="btn btn-small btn-secondary" data-gppackedit="${p.id}">Edit</button> <button class="btn btn-small btn-secondary" data-gppackdup="${p.id}">Duplicate</button> <button class="btn btn-small btn-danger" data-gppackdel="${p.id}">${used ? "Deactivate" : "Remove"}</button></td></tr>`; }).join("") || '<tr><td colspan="8" class="gp-muted" style="text-align:center;padding:1.5rem">No packaging defined for this item yet.</td></tr>'}
-      </tbody></table>
-      <p style="margin-top:1rem"><b>Total packaging per unit today: ${kg(total)} kg</b></p>
-      <button class="btn btn-primary" data-gppackadd>+ Add packaging</button>${GP.pending ? ` <button class="btn btn-secondary" data-gpback>← Back to document ${E(GP.pending.number || "")}</button>` : ""}` : '<p class="gp-muted">There are no materials or products in the ERP yet.</p>'}</div>`;
+      <p class="gp-muted">What packaging comes with ONE unit of this item, split into its parts, because GPAIS is reported by material. For example, primary: plastic box, bubble wrap, paper infill; secondary: carton box, bubble wrap, stretch wrap. When a weight changes, the new weight starts on a date and older documents keep the old one.</p>
+      ${it ? `${packSections(cur).map(s => { const w = s.lines.reduce((a, p) => a + perUnit(p), 0); const open = GP.openSec[s.id] ?? s.lines.length > 0;
+        return `<details class="gp-sec" data-gpsec="${s.id}"${open ? " open" : ""}><summary><span>${E(s.name)}</span><small>${s.lines.length} line${s.lines.length === 1 ? "" : "s"}</small><b>${kg(w)} kg</b></summary>
+          ${s.lines.length ? `<table class="data-table">${head}<tbody>${s.lines.map(p => line(p)).join("")}</tbody></table>` : '<p class="gp-muted" style="padding:.75rem 1rem">Nothing in this category.</p>'}</details>`; }).join("")}
+      <div class="gp-total"><span>Total packaging per unit today</span><b>${kg(total)} kg</b></div>
+      <button class="btn btn-primary" data-gppe>${cur.length ? "Edit packaging lines" : "+ Add packaging lines"}</button>${GP.pending ? ` <button class="btn btn-secondary" data-gpback>← Back to document ${E(GP.pending.number || "")}</button>` : ""}
+      ${old.length ? `<details class="gp-sec" style="margin-top:1.25rem"><summary><span>Earlier and future versions</span><small>${old.length} line${old.length === 1 ? "" : "s"}</small><b></b></summary><table class="data-table">${head}<tbody>${old.map(p => line(p, true)).join("")}</tbody></table></details>` : ""}`
+      : '<p class="gp-muted">There are no materials or products in the ERP yet.</p>'}</div>`;
+  }
+  /* edit all packaging lines of one item at once, section by section */
+  function peForm() {
+    const cur = packOf(GP.packItem, today());
+    GP.pe = { rows: cur.map(p => ({ key: p.id, id: p.id, categoryId: p.categoryId || "", name: p.name, materialId: p.materialId || "", weight: p.weightMg == null ? "" : kgIn(p.weightMg), unit: "kg", qty: qn(p.qtyPerUnitMilli || 1000), reusable: !!p.reusable })) };
+    const cats = D().gpCategories.filter(c => c.active !== false);
+    for (const c of cats.slice(0, 2)) if (!GP.pe.rows.some(r => r.categoryId === c.id)) GP.pe.rows.push(peBlank(c.id));
+    GP.pe.eff = today(); showModal(peHtml());
+  }
+  const peBlank = catId => ({ key: uid("N"), id: null, categoryId: catId, name: "", materialId: "", weight: "", unit: "kg", qty: "1", reusable: false });
+  function peHtml() {
+    const it = item(GP.packItem); const pe = GP.pe;
+    const used = pe.rows.some(r => r.id && packUsed(r.id));
+    const secs = packSections([]).map(s => ({ ...s, lines: pe.rows.filter(r => (cat(r.categoryId) ? r.categoryId : "") === s.id) })).filter(s => s.id || s.lines.length);
+    const rowW = r => { const w = toMg(r.weight, r.unit), q = qMilli(r.qty || "1"); return Number.isNaN(w) || Number.isNaN(q) || w == null || q == null ? 0 : mulMilli(w, q); };
+    return `<div class="modal-header"><h2>Packaging · ${E(it ? it.name : "")}</h2><button class="modal-close" data-gpclose>&times;</button></div>
+      <p class="gp-muted" style="margin-top:0">Packaging on ONE unit of this item. Every line needs a name, material and weight. Empty lines are ignored.</p>
+      ${secs.map(s => { const tot = s.lines.reduce((a, r) => a + rowW(r), 0);
+        return `<details class="gp-sec" open><summary><span>${E(s.name)}</span><small data-pecount="${s.id}">${s.lines.filter(r => r.name || r.weight).length} line(s)</small><b data-pesum="${s.id}">${kg(tot)} kg</b></summary>
+        <table class="data-table gp-lines gp-pe"><thead><tr><th>Packaging</th><th style="width:150px">Material</th><th style="width:170px">Weight each</th><th style="width:90px">Pieces per unit</th><th style="width:70px">Reusable</th><th style="width:40px"></th></tr></thead><tbody>
+        ${s.lines.map(r => `<tr><td><input data-pe="${r.key}" data-f="name" value="${E(r.name)}" placeholder="e.g. ${s.name.startsWith("Secondary") ? "Carton box" : s.name.startsWith("Transport") ? "Share of pallet" : "Plastic box"}"></td>
+          <td><select data-pe="${r.key}" data-f="materialId">${opts(D().gpMaterials, r.materialId)}</select></td>
+          <td><div style="display:flex;gap:.35rem"><input data-pe="${r.key}" data-f="weight" value="${E(r.weight)}" inputmode="decimal" placeholder="0.000"><select data-pe="${r.key}" data-f="unit" style="width:62px"><option${r.unit === "kg" ? " selected" : ""}>kg</option><option${r.unit === "g" ? " selected" : ""}>g</option></select></div></td>
+          <td><input data-pe="${r.key}" data-f="qty" value="${E(r.qty)}" inputmode="decimal"></td>
+          <td style="text-align:center"><input type="checkbox" data-pe="${r.key}" data-f="reusable"${r.reusable ? " checked" : ""}></td>
+          <td><button class="btn btn-small btn-danger" data-perm="${r.key}" title="Remove line">×</button></td></tr>`).join("")}
+        </tbody></table><button class="btn btn-small btn-secondary" data-peadd="${s.id}" style="margin:.5rem 0 .25rem">+ Add ${E(s.name.split(" ")[0].toLowerCase())} line</button></details>`; }).join("")}
+      <div class="gp-total"><span>Total per unit</span><b id="peTotal">${kg(pe.rows.reduce((a, r) => a + rowW(r), 0))} kg</b></div>
+      ${used ? `<div class="gp-note">Some of these lines are already used by posted documents. Changed weights, materials and removed lines apply from this date; documents before it keep the old values: <input id="peEff" type="date" value="${E(pe.eff)}"></div>` : ""}
+      <div class="modal-footer"><button class="btn btn-secondary" data-gpclose>Cancel</button><button class="btn btn-primary" data-pesave>Save packaging</button></div>`;
+  }
+  function readPE() {
+    const pe = GP.pe; if (!pe) return;
+    document.querySelectorAll("#gp-modal [data-pe]").forEach(el => { const r = pe.rows.find(x => x.key === el.dataset.pe); if (r) r[el.dataset.f] = el.type === "checkbox" ? el.checked : el.value; });
+    const eff = document.getElementById("peEff"); if (eff) pe.eff = eff.value;
+  }
+  function peTotals() {
+    readPE(); const rw = r => { const w = toMg(r.weight, r.unit), q = qMilli(r.qty || "1"); return w == null || Number.isNaN(w) || Number.isNaN(q) || q == null ? 0 : mulMilli(w, q); };
+    const by = {}; let all = 0; GP.pe.rows.forEach(r => { const k = cat(r.categoryId) ? r.categoryId : ""; by[k] = (by[k] || 0) + rw(r); all += rw(r); });
+    document.querySelectorAll("#gp-modal [data-pesum]").forEach(el => { el.textContent = kg(by[el.dataset.pesum] || 0) + " kg"; });
+    const t = $("#peTotal"); if (t) t.textContent = kg(all) + " kg";
+    document.querySelectorAll("#gp-modal [data-pecount]").forEach(el => { el.textContent = GP.pe.rows.filter(r => (cat(r.categoryId) ? r.categoryId : "") === el.dataset.pecount && (r.name || r.weight)).length + " line(s)"; });
+  }
+  function peRedraw() { const m = $("#gp-modal .modal-content"); if (m && GP.pe) { const y = m.scrollTop; m.innerHTML = peHtml(); m.scrollTop = y; } }
+  function savePE() {
+    readPE(); D(); const pe = GP.pe; const at = new Date().toISOString(); const itName = (item(GP.packItem) || {}).name;
+    const rows = pe.rows.filter(r => r.id || r.name.trim() || r.weight.trim() || r.materialId);
+    const clean = [];
+    for (const r of rows) {
+      const where = `${(cat(r.categoryId) || { name: "No category" }).name}, "${r.name.trim() || "line without a name"}"`;
+      if (!r.name.trim()) return toast(`${where}: enter what the packaging is.`, "error");
+      if (!r.materialId) return toast(`${where}: choose the material.`, "error");
+      const w = toMg(r.weight, r.unit); if (w == null || Number.isNaN(w) || w <= 0) return toast(`${where}: enter a weight more than 0.`, "error");
+      const q = qMilli(r.qty || "1"); if (Number.isNaN(q) || !(q > 0)) return toast(`${where}: pieces per unit must be more than 0.`, "error");
+      clean.push({ r, d: { item: GP.packItem, name: r.name.trim(), materialId: r.materialId, categoryId: r.categoryId || null, weightMg: w, qtyPerUnitMilli: q, reusable: !!r.reusable } });
+    }
+    const usedAny = rows.some(r => r.id && packUsed(r.id)) || pe.rows.some(r => r.id && packUsed(r.id));
+    const eff = pe.eff; if (usedAny && !isoDate(eff)) return toast("Choose the date the changes start.", "error");
+    const log = [];
+    for (const { r, d } of clean) {
+      if (!r.id) { db.gpPack.push({ id: uid("PK"), ...d, validFrom: usedAny ? eff : null, validTo: null, active: true, notes: "", createdAt: at, createdBy: who() }); log.push(`added ${d.name} ${kg(d.weightMg)} kg`); continue; }
+      const old = db.gpPack.find(p => p.id === r.id); if (!old) continue;
+      const calc = ["weightMg", "qtyPerUnitMilli", "materialId", "categoryId"].some(k => (old[k] ?? null) !== (d[k] ?? null));
+      const other = old.name !== d.name || !!old.reusable !== d.reusable;
+      if (!calc && !other) continue;
+      if (calc && packUsed(old.id)) {
+        if (old.validFrom && eff <= old.validFrom) return toast(`"${old.name}" already changed on ${old.validFrom}; choose a later date.`, "error");
+        old.validTo = dayBefore(eff); old.modifiedAt = at; old.modifiedBy = who();
+        db.gpPack.push({ id: uid("PK"), ...d, validFrom: eff, validTo: null, active: true, notes: old.notes || "", supersedes: old.id, createdAt: at, createdBy: who() });
+        log.push(`${d.name} ${kg(old.weightMg || 0)} → ${kg(d.weightMg)} kg from ${eff}`);
+      } else { Object.assign(old, d, { modifiedAt: at, modifiedBy: who() }); log.push(`changed ${d.name}`); }
+    }
+    for (const r of pe.rows.filter(r => r.id && !clean.some(c => c.r === r))) {       // lines removed in the editor
+      const old = db.gpPack.find(p => p.id === r.id); if (!old) continue;
+      if (packUsed(old.id)) { if (old.validFrom && eff <= old.validFrom) return toast(`"${old.name}" can't end before it started (${old.validFrom}).`, "error"); old.validTo = dayBefore(eff); log.push(`${old.name} ends ${old.validTo}`); }
+      else { db.gpPack = db.gpPack.filter(p => p.id !== old.id); log.push(`removed ${old.name}`); }
+    }
+    if (!log.length) { hideModal(); return toast("Nothing was changed.", "info"); }
+    audit("packaging", `Packaging for ${itName}: ${log.join("; ")}`);
+    if (save()) { hideModal(); GP.pe = null; render(); toast("Packaging saved"); }
   }
   function packForm(p, dup) {
     const it = item(GP.packItem); const edit = p && !dup;
@@ -648,7 +739,7 @@
   /* ---------- events ---------- */
   function bind(root) {
     root.addEventListener("click", e => {
-      const b = e.target.closest("[data-gpview],[data-gpgo],[data-gpnewdoc],[data-gpeditdoc],[data-gppost],[data-gpcomplete],[data-gpvoid],[data-gpdeldoc],[data-gpclose],[data-gdadd],[data-gdrm],[data-gdxadd],[data-gdxrm],[data-gdsave],[data-gpdefine],[data-gppackadd],[data-gppackedit],[data-gppackdup],[data-gppackdel],[data-gppacksave],[data-gpsrc],[data-gpfix],[data-gpfixsave],[data-gpvoidrec],[data-gprestore],[data-gpmore],[data-gpclrdoc],[data-gpexp],[data-gpperiod],[data-gpissue],[data-gpmedit],[data-gpmsave],[data-gpimport],[data-gpimpclear],[data-gpexpall],[data-gptemplate],[data-gpback]");
+      const b = e.target.closest("[data-gpview],[data-gpgo],[data-gpnewdoc],[data-gpeditdoc],[data-gppost],[data-gpcomplete],[data-gpvoid],[data-gpdeldoc],[data-gpclose],[data-gdadd],[data-gdrm],[data-gdxadd],[data-gdxrm],[data-gdsave],[data-gpdefine],[data-gppackadd],[data-gppackedit],[data-gppackdup],[data-gppackdel],[data-gppacksave],[data-gpsrc],[data-gpfix],[data-gpfixsave],[data-gpvoidrec],[data-gprestore],[data-gpmore],[data-gpclrdoc],[data-gpexp],[data-gpperiod],[data-gpissue],[data-gpmedit],[data-gpmsave],[data-gpimport],[data-gpimpclear],[data-gpexpall],[data-gptemplate],[data-gpback],[data-gppe],[data-peadd],[data-perm],[data-pesave]");
       if (!b) return; const d = b.dataset; if (b.tagName === "A") e.preventDefault();
       if (d.gpview) return GP.go(d.gpview);
       if (d.gpgo) { const extra = {}; if (d.gpgo === "records") extra.recF = { ...GP.recF, doc: d.gpdoc || "", status: d.gpstatus || "active", quarter: d.gpdoc || d.gpstatus ? "" : GP.recF.quarter }; hideModal(); return GP.go(d.gpgo, extra); }
@@ -666,6 +757,10 @@
       if (d.gdsave) { readLines(); return saveDocForm(d.gdsave === "post"); }
       if (d.gpdefine) { readDocForm(); readLines(); GP.packItem = d.gpdefine; GP.pending = GP.draft; hideModal(); GP.view = "packaging"; render(); return; }
       if (d.gpback != null) { const dr = GP.pending; GP.pending = null; GP.view = "docs"; render(); if (dr) { GP.draft = dr; showModal(docModalHtml(!dr.id)); docPreview(); } return; }
+      if (d.gppe != null) return peForm();
+      if (d.peadd != null) { readPE(); const rs = GP.pe.rows; let at = -1; rs.forEach((r, i) => { if ((cat(r.categoryId) ? r.categoryId : "") === d.peadd) at = i; }); rs.splice(at < 0 ? rs.length : at + 1, 0, peBlank(d.peadd)); peRedraw(); const k = GP.pe.rows[at < 0 ? rs.length - 1 : at + 1].key; const n = document.querySelector(`#gp-modal [data-pe="${k}"][data-f=name]`); if (n) n.focus(); return; }
+      if (d.perm) { readPE(); GP.pe.rows = GP.pe.rows.filter(r => r.key !== d.perm); return peRedraw(); }
+      if (d.pesave != null) return savePE();
       if (d.gppackadd != null) return packForm(null);
       if (d.gppackedit) return packForm(db.gpPack.find(p => p.id === d.gppackedit));
       if (d.gppackdup) { const p = db.gpPack.find(x => x.id === d.gppackdup); return packForm({ ...p, name: p.name + " (copy)" }, true); }
@@ -698,12 +793,15 @@
       if (id === "gpImpFile" && t.files[0]) { parseImport(t.files[0]); t.value = ""; return; }
       if (id === "gdSup") { readDocForm(); const s = supplier(t.value); if (s) { GP.draft.partner = s.name; const si = sInfo(s.id); if (si) { GP.draft.country = si.country || ""; GP.draft.eu = !!si.eu; } } return rerenderDoc(true); }
       if (id === "gdCountry") { const c = t.value.trim().toUpperCase(); const eu = $("#gdEU"); if (eu && c.length === 2) eu.checked = EU.includes(c) && c !== "LT"; docPreview(); return; }
+      if (t.dataset.pe != null) { peTotals(); return; }
       if (t.dataset.gdline != null || t.dataset.gdx != null || id === "gdDate") { readLines(); if (t.dataset.f === "item" || id === "gdDate") return rerenderDoc(); docPreview(); }
     });
+    root.addEventListener("toggle", e => { const el = e.target; if (el.dataset && el.dataset.gpsec != null) { GP.openSec = GP.openSec || {}; GP.openSec[el.dataset.gpsec] = el.open; } }, true);
     root.addEventListener("input", e => {
       const id = e.target.id;
       if (id === "gpDocQ") { GP.docF.q = e.target.value; keepFocus(render, id); } if (id === "gpRQ") { GP.recF.q = e.target.value; keepFocus(render, id); } if (id === "gpAudQ") { GP.audQ = e.target.value; keepFocus(render, id); }
       if (e.target.dataset.gdline != null || e.target.dataset.gdx != null) { readLines(); docPreview(); }
+      if (e.target.dataset.pe != null) peTotals();
     });
   }
   function keepFocus(fn, id) { const el = document.getElementById(id); const p = el ? el.selectionStart : null; fn(); const n = document.getElementById(id); if (n) { n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} } }

@@ -59,7 +59,7 @@ NEW IN VERSION 1.2
 
 UPDATES FROM NOW ON
   Later updates come as ONE small file (about 1.5 MB) named like
-  "Team Board update 1.2.4.asar". In Team Board: Help > Install update
+  "Team Board update 1.2.5.asar". In Team Board: Help > Install update
   from file, choose the file, click "Restart now". If an update ever
   fails to start, the program sets it aside and keeps working.
   Help > "Go back to the previous version" undoes an update.
@@ -68,8 +68,11 @@ GPAIS PACKAGING (ERP tab > Compliance > GPAIS packaging)
   1. Materials & GPAIS codes: enter the official GPAIS code for each
      material you use, and note where the code comes from. The program
      has no codes built in.
-  2. Item packaging: for each item you buy, enter the packaging on ONE
-     unit (box, bag, share of a pallet), with its material and weight.
+  2. Item packaging: choose an item, click "Edit packaging lines" and
+     enter the packaging on ONE unit, line by line, under Primary,
+     Secondary and Transport (e.g. primary: plastic box, bubble wrap,
+     paper infill; secondary: carton box, bubble wrap, plastic wrap).
+     Every line needs a material and a weight.
   3. Shipments & invoices > + Incoming shipment: for each delivery from
      a supplier, enter the invoice number, date, country, EU tick, items
      and quantities, plus any pallets or film on the whole delivery.

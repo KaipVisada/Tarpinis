@@ -29,3 +29,15 @@
 .gp-step:not(:last-child)::after { content: "↓"; position: absolute; left: -.55rem; bottom: -1.15rem; color: var(--text-secondary); }
 .gp-step small { color: var(--text-secondary); }
 @media (max-width: 700px) { .gp-bar { grid-template-columns: 90px 1fr 80px; } }
+.gp-sec { border: 1px solid var(--bg-3); border-radius: 10px; margin: .75rem 0; background: var(--bg-1); overflow: hidden; }
+.gp-sec > summary { display: flex; align-items: center; gap: .75rem; padding: .8rem 1rem; cursor: pointer; list-style: none; background: var(--bg-2); font-weight: 600; }
+.gp-sec > summary::-webkit-details-marker { display: none; }
+.gp-sec > summary::before { content: "▸"; color: var(--accent-green); transition: transform .15s; }
+.gp-sec[open] > summary::before { transform: rotate(90deg); }
+.gp-sec > summary span { flex: 1; }
+.gp-sec > summary small { color: var(--text-secondary); font-weight: 400; }
+.gp-sec > summary b { min-width: 90px; text-align: right; }
+.gp-sec > .data-table, .gp-sec > .gp-lines { margin: 0; }
+.gp-sec > .btn { margin-left: 1rem !important; margin-bottom: .75rem !important; }
+.gp-total { display: flex; justify-content: space-between; padding: .8rem 1rem; margin: .75rem 0 1rem; border-radius: 10px; background: rgba(46,204,113,.12); border: 1px solid var(--accent-green); font-size: 1.05rem; }
+.gp-pe input:not([type=checkbox]), .gp-pe select { width: 100%; }
