@@ -1,0 +1,33 @@
+# Team Board desktop program
+
+The team board and the DroneForge Pro ERP in one Windows program. Data is saved in `Documents\Team Board` (older versions saved next to the exe; 1.1 moves that data over on first start). It runs a small local
+server on the PC connected to the TV. Its own window shows the board (ERP tab for admins),
+and phones on the same network can open the board in a browser.
+
+## How it fits together
+
+| Part | What it does |
+| --- | --- |
+| `app-main.js` | Electron shell: starts the server, opens the window (F11 full screen), handles downloads, recovers from crashes |
+| `server/store.js` | Document store saved to `store.json` (atomic writes with retries for locked files, previous copy, recovery of unfinished saves, daily backups kept 60 days) |
+| `server/erp.js` | ERP data as one document. Saves are merged record by record and field by field so screens don't overwrite each other. Tasks with a product and quantity get a matching Planning entry and Production order; reported units take materials out of stock (by BOM) and add finished products; quality checks go to the Quality tab |
+| `server/guard.js` | Outside-network access (blocked unless a password is set; sign-in page, cookie, rate limit) and the daily extra backup copy to a chosen folder |
+| `main.js` | Start-up loader: runs the newest installed update from `Documents\Team Board\updates`, falls back to the built-in version if it fails |
+| `server/index.js` | HTTP API, live updates (server-sent events), file attachments, static files |
+| `web-src/desktop-shim.js` | Gives the team board the same `window.claude.use("db")` API it has as an artifact, backed by the server |
+| `web-src/erp-bridge.js` | Redirects the ERP's browser storage to the server and refreshes it when data changes elsewhere |
+| `build-web.js` | Builds `web/` from `../team-board/index.html` and `erp-source/DroneForge_Pro_EU.html` |
+
+## Build
+
+```sh
+npm install
+npm run build:web          # team board + ERP -> web/
+npm run serve              # run the server alone: http://localhost:8080
+npm start                  # run the program (Electron)
+npm run dist:win           # Windows program in dist/
+npm run dist:update        # small update file in dist/ (install via Help > Install update from file)
+```
+
+To update the ERP, replace `erp-source/DroneForge_Pro_EU.html` and rebuild. The build fails
+loudly if the ERP's structure changed in a way the bridge depends on.
